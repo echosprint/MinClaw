@@ -1,8 +1,9 @@
-import { Bot, type User } from 'grammy'
+import { Bot } from 'grammy'
+import type { UserFromGetMe } from '@grammyjs/types'
 import { HttpsProxyAgent } from 'https-proxy-agent'
 import * as db from './db'
 
-export function createBot(token: string, botInfo?: User): Bot {
+export function createBot(token: string, botInfo?: UserFromGetMe): Bot {
   const proxy = process.env.HTTPS_PROXY
   const botConfig = proxy
     ? { client: { baseFetchConfig: { agent: new HttpsProxyAgent(proxy) } } }
