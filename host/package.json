@@ -1,0 +1,21 @@
+{
+  "name": "minclaw-host",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "grammy": "^1.21.1",
+    "better-sqlite3": "^9.4.3",
+    "cron-parser": "^4.9.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "tsx": "^4.7.0",
+    "@types/node": "^20.11.5",
+    "@types/better-sqlite3": "^7.6.8",
+    "vitest": "latest"
+  }
+}
