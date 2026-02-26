@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeAll, afterAll } from 'vitest'
 import http from 'http'
-import { createServer } from './server'
-import type { RunPayload } from './runner'
+import { createServer } from '../src/server'
+import type { RunPayload } from '../src/runner'
 
 const PORT = 4099
 

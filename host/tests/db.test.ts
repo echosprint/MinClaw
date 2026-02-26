@@ -1,6 +1,6 @@
 import { describe, test, beforeAll } from 'vitest'
 import { expect } from 'vitest'
-import * as db from './db'
+import * as db from '../src/db'
 
 describe('db: messages', () => {
   beforeAll(() => {

@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeAll } from 'vitest'
-import * as db from './db'
-import { createBot } from './bot'
+import * as db from '../src/db'
+import { createBot } from '../src/bot'
 
 const TEST_BOT_INFO = {
   id: 1,
@@ -10,6 +10,18 @@ const TEST_BOT_INFO = {
   can_join_groups: true,
   can_read_all_group_messages: false,
   supports_inline_queries: false,
+  can_connect_to_business: false,
+  has_main_web_app: false,
+  has_topics_enabled: false,
+  allows_users_to_create_topics: false,
+}
+
+function makeBotWithMockedApi() {
+  const bot = createBot('fake-token', TEST_BOT_INFO)
+  bot.api.config.use((_prev, _method, _payload, _signal) =>
+    Promise.resolve({ ok: true, result: true } as any)
+  )
+  return bot
 }
 
 function makeUpdate(chatId: number, text: string, updateId = 1) {
@@ -29,15 +41,6 @@ describe('bot: message handling', () => {
   beforeAll(() => {
     db.init(':memory:')
   })
-
-  function makeBotWithMockedApi() {
-    const bot = createBot('fake-token', TEST_BOT_INFO)
-    // intercept all API calls so no real HTTP requests are made in tests
-    bot.api.config.use((_prev, _method, _payload, _signal) =>
-      Promise.resolve({ ok: true, result: true } as any)
-    )
-    return bot
-  }
 
   test('saves user message to db on incoming text', async () => {
     const bot = makeBotWithMockedApi()

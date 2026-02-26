@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeAll, afterAll } from 'vitest'
 import http from 'http'
-import { createServer } from './server'
+import { createServer } from '../src/server'
 
 const PORT = 3099
 

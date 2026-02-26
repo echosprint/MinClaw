@@ -1,7 +1,7 @@
 import { describe, test, expect } from 'vitest'
-import { tick } from './scheduler'
-import type { Job } from './db'
-import type { RunPayload } from './agent'
+import { tick } from '../src/scheduler'
+import type { Job } from '../src/db'
+import type { RunPayload } from '../src/agent'
 
 function makeJob(overrides: Partial<Job> = {}): Job {
   return {
