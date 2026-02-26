@@ -1,5 +1,5 @@
-import { createServer } from './server'
-import { run } from './runner'
+import { createServer } from './server.js'
+import { run } from './runner.js'
 
 const PORT = Number(process.env.AGENT_PORT ?? 4000)
 

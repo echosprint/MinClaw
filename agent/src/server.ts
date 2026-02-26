@@ -1,5 +1,5 @@
 import http from 'http'
-import type { RunPayload } from './runner'
+import type { RunPayload } from './runner.js'
 
 export interface AgentServerDeps {
   run: (payload: RunPayload) => Promise<void>

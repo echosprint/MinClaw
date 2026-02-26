@@ -2,12 +2,16 @@
   "name": "minclaw-agent",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "tsx src/index.ts",
+    "build": "tsc",
     "test": "vitest run"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "latest"
+    "@anthropic-ai/claude-agent-sdk": "latest",
+    "@modelcontextprotocol/sdk": "latest",
+    "zod": "^4.0.0"
   },
   "devDependencies": {
     "typescript": "^5.3.3",
