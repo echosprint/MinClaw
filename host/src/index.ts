@@ -29,7 +29,13 @@ const server = createServer(
 
 // 3. Telegram bot
 bot = createBot(BOT_TOKEN)
-bot.start()
+bot.catch(err => console.error('[bot] error:', err))
+bot.start({
+  onStart: (info) => console.log(`[bot] polling started @${info.username}`),
+}).catch(err => {
+  console.error('[bot] failed to start:', err)
+  process.exit(1)
+})
 
 // 4. Scheduler — fires due jobs every minute
 startScheduler({
