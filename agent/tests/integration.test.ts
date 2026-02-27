@@ -94,7 +94,9 @@ describe("agent integration", () => {
   }
 
   // Helper: simulate agent calling MCP tools, extracted from the query call options
-  function agentCallsTools(fn: (handlers: ReturnType<typeof createHandlers>, chatId: string) => Promise<void>) {
+  function agentCallsTools(
+    fn: (handlers: ReturnType<typeof createHandlers>, chatId: string) => Promise<void>,
+  ) {
     vi.mocked(query).mockImplementation(async function* (params: Parameters<typeof query>[0]) {
       const env =
         (params.options?.mcpServers as Record<string, { env?: Record<string, string> }>)?.minclaw

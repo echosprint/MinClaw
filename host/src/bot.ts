@@ -25,7 +25,9 @@ export function createBot(token: string, deps: BotDeps, botInfo?: UserFromGetMe)
   const bot = new Bot(token, { ...botConfig, ...(botInfo ? { botInfo } : {}) });
 
   COMMANDS.start = async (ctx) => {
-    await ctx.reply("Hi! I'm MinClaw, your personal assistant. Just send me a message to get started.");
+    await ctx.reply(
+      "Hi! I'm MinClaw, your personal assistant. Just send me a message to get started.",
+    );
   };
 
   COMMANDS.chatid = async (ctx) => {
@@ -36,7 +38,9 @@ export function createBot(token: string, deps: BotDeps, botInfo?: UserFromGetMe)
     const chatId = String(ctx.chat!.id);
     const pingMsg = "this message is ping, please only reply `ping successful`";
 
-    const historyBefore = deps.getHistory(chatId).map((m) => ({ role: m.role, content: m.content }));
+    const historyBefore = deps
+      .getHistory(chatId)
+      .map((m) => ({ role: m.role, content: m.content }));
     const sentAt = Date.now();
 
     deps.saveMessage(chatId, "user", pingMsg);
@@ -75,7 +79,9 @@ export function createBot(token: string, deps: BotDeps, botInfo?: UserFromGetMe)
     if (text.startsWith("/")) {
       const cmd = text.slice(1).split(/[\s@]/)[0];
       if (!(cmd in COMMANDS)) {
-        await ctx.reply(`Unknown command /${cmd}. Available: /${Object.keys(COMMANDS).join(", /")}`);
+        await ctx.reply(
+          `Unknown command /${cmd}. Available: /${Object.keys(COMMANDS).join(", /")}`,
+        );
       }
       return;
     }
