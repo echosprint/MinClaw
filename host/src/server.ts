@@ -48,7 +48,7 @@ export function createServer(deps: ServerDeps, port: number): http.Server {
       if (route === 'POST /schedule') {
         try {
           const nextRun = parseExpression(body.cron).next().toDate().getTime()
-          const oneShot = body.one_shot === 'true' || body.one_shot === true
+          const oneShot = body.one_shot === 'true'
           const jobId = deps.saveJob(body.chatId, body.cron, body.task, nextRun, oneShot)
           log.info(`schedule   chatId=${body.chatId} cron="${body.cron}" one_shot=${oneShot} jobId=${jobId}`)
           respond(res, 200, { jobId })
