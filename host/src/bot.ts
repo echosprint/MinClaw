@@ -24,6 +24,10 @@ export function createBot(token: string, deps: BotDeps, botInfo?: UserFromGetMe)
     : {};
   const bot = new Bot(token, { ...botConfig, ...(botInfo ? { botInfo } : {}) });
 
+  COMMANDS.start = async (ctx) => {
+    await ctx.reply("Hi! I'm MinClaw, your personal assistant. Just send me a message to get started.");
+  };
+
   COMMANDS.chatid = async (ctx) => {
     await ctx.reply(`Your chat ID: ${ctx.chat!.id}`);
   };
