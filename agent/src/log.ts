@@ -10,11 +10,11 @@ function sendToHost(level: string, msg: string): void {
 
 export const log = {
   info(msg: string): void {
-    console.log(`[agent][INFO] ${msg}`);
+    console.log(`[agt][INFO] ${msg}`);
     sendToHost("info", msg);
   },
   error(msg: string): void {
-    console.error(`[agent][ERROR] ${msg}`);
+    console.error(`[agt][ERROR] ${msg}`);
     sendToHost("error", msg);
   },
 };

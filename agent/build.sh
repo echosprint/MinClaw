@@ -19,5 +19,5 @@ if ! ${RUNTIME} image inspect minclaw-agent-base:latest &>/dev/null; then
 fi
 
 echo "Building agent image..."
-${RUNTIME} build -t minclaw-agent:latest .
+${RUNTIME} build -q -t minclaw-agent:latest . > /dev/null
 echo "Done: minclaw-agent:latest"
