@@ -8,5 +8,7 @@ services:
       - HOST_URL=http://host.docker.internal:3000
       - SEARCH_API_KEY=${SEARCH_API_KEY}
       - AGENT_PORT=4000
+    volumes:
+      - ./log:/app/log
     extra_hosts:
       - "host.docker.internal:host-gateway"
