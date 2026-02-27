@@ -3,7 +3,22 @@ import { enqueue } from "./runner.js";
 import { log } from "./log.js";
 
 const PORT = Number(process.env.AGENT_PORT ?? 14827);
+const HOST_URL = process.env.HOST_URL ?? "http://host.docker.internal:13821";
+
+async function waitForHost(): Promise<void> {
+  while (true) {
+    try {
+      const res = await fetch(`${HOST_URL}/health`, { signal: AbortSignal.timeout(1000) });
+      if (res.ok) return;
+    } catch {}
+    await new Promise((r) => setTimeout(r, 500));
+  }
+}
+
+await waitForHost();
 
 createServer({ enqueue }, PORT);
 
+
 log.info(`MinClaw agent running on :${PORT}`);
+log.info("---------------------------");
