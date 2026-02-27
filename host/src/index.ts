@@ -22,7 +22,7 @@ db.init()
 let bot: Bot
 const server = createServer(
   {
-    sendToTelegram: (chatId, text) => bot.api.sendMessage(chatId, mdToHtml(text), { parse_mode: 'HTML' }),
+    sendToTelegram: async (chatId, text) => { await bot.api.sendMessage(chatId, mdToHtml(text), { parse_mode: 'HTML' }) },
     saveMessage: db.saveMessage.bind(db),
     saveJob: db.saveJob.bind(db),
   },

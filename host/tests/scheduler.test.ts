@@ -11,6 +11,7 @@ function makeJob(overrides: Partial<Job> = {}): Job {
     task: 'check btc price',
     next_run: Date.now() - 1000,
     active: 1,
+    one_shot: 0,
     ...overrides,
   }
 }
@@ -22,6 +23,7 @@ describe('scheduler: tick', () => {
     await tick({
       getDueJobs: () => [makeJob()],
       advanceJob: () => {},
+      deactivateJob: () => {},
       runAgent: async (p) => { called.push(p) },
     })
 
@@ -36,6 +38,7 @@ describe('scheduler: tick', () => {
     await tick({
       getDueJobs: () => [makeJob()],
       advanceJob: () => {},
+      deactivateJob: () => {},
       runAgent: async (p) => { called.push(p) },
     })
 
@@ -48,6 +51,7 @@ describe('scheduler: tick', () => {
     await tick({
       getDueJobs: () => [makeJob({ id: 42, cron: '0 15 * * *' })],
       advanceJob: (id, nextRun) => { advanced.push({ id, nextRun }) },
+      deactivateJob: () => {},
       runAgent: async () => {},
     })
 
@@ -62,6 +66,7 @@ describe('scheduler: tick', () => {
     await tick({
       getDueJobs: () => [],
       advanceJob: () => {},
+      deactivateJob: () => {},
       runAgent: async () => { agentCalled = true },
     })
 

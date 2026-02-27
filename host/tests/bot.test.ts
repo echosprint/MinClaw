@@ -17,7 +17,11 @@ const TEST_BOT_INFO = {
 }
 
 function makeBotWithMockedApi() {
-  const bot = createBot('fake-token', TEST_BOT_INFO)
+  const bot = createBot('fake-token', {
+    saveMessage: db.saveMessage.bind(db),
+    getHistory: db.getHistory.bind(db),
+    runAgent: async () => {},
+  }, TEST_BOT_INFO)
   bot.api.config.use((_prev, _method, _payload, _signal) =>
     Promise.resolve({ ok: true, result: true } as any)
   )
