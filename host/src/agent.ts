@@ -11,11 +11,13 @@ export interface RunPayload {
 
 const AGENT_URL = process.env.AGENT_URL ?? "http://localhost:14827";
 
+const TIMEZONE = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
 export async function run(payload: RunPayload): Promise<void> {
   await fetch(`${AGENT_URL}/run`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ ...payload, timezone: TIMEZONE, timestamp: new Date().toISOString() }),
   });
 }
 

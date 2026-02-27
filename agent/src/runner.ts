@@ -12,6 +12,8 @@ export interface RunPayload {
   chatId: string;
   message: string;
   history: Message[];
+  timezone: string;
+  timestamp: string;
 }
 
 const HOST_URL = process.env.HOST_URL ?? "http://host.docker.internal:13821";
@@ -97,7 +99,8 @@ async function runQuery(payload: RunPayload): Promise<void> {
     .map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`)
     .join("\n");
 
-  const prompt = context ? `${context}\n\nUser: ${payload.message}` : payload.message;
+  const tzNote = `[User timezone: ${payload.timezone}, current time: ${new Date(payload.timestamp).toLocaleString("en-US", { timeZone: payload.timezone })}]\n\n`;
+  const prompt = tzNote + (context ? `${context}\n\nUser: ${payload.message}` : payload.message);
 
   // .claude/CLAUDE.md is auto-loaded as project context (persona + communication rules)
   // .claude/skills/agent-browser is loaded as a plugin (agent-browser skill)
