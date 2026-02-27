@@ -35,7 +35,7 @@ export class McpHandlers {
     });
   }
 
-  async send_message({ text }: { text: string }): Promise<ToolResult> {
+  send_message = async ({ text }: { text: string }): Promise<ToolResult> => {
     log.info(`send_message chatId=${this.chatId} text="${text.slice(0, 80)}"`);
     const res = await this.post("/send", { chatId: this.chatId, text });
     const result = res.ok ? "sent" : `error: ${res.status}`;
@@ -43,7 +43,7 @@ export class McpHandlers {
     return ok(result);
   }
 
-  async schedule_job({
+  schedule_job = async ({
     cron,
     task,
     one_shot,
@@ -51,7 +51,7 @@ export class McpHandlers {
     cron: string;
     task: string;
     one_shot?: boolean;
-  }): Promise<ToolResult> {
+  }): Promise<ToolResult> => {
     log.info(
       `schedule_job chatId=${this.chatId} cron="${cron}" one_shot=${!!one_shot} task="${task}"`,
     );
@@ -71,7 +71,7 @@ export class McpHandlers {
     return ok(`Scheduled job #${data.jobId}`);
   }
 
-  async list_tasks(): Promise<ToolResult> {
+  list_tasks = async (): Promise<ToolResult> => {
     log.info(`list_tasks chatId=${this.chatId}`);
     const res = await this.get(`/jobs?chatId=${encodeURIComponent(this.chatId)}`);
     const jobs = (await res.json()) as Job[];
@@ -85,7 +85,7 @@ export class McpHandlers {
     return ok(`Scheduled tasks:\n${lines.join("\n")}`);
   }
 
-  async cancel_task({ job_id }: { job_id: number }): Promise<ToolResult> {
+  cancel_task = async ({ job_id }: { job_id: number }): Promise<ToolResult> => {
     log.info(`cancel_task chatId=${this.chatId} job_id=${job_id}`);
     const res = await this.post("/cancel-job", {
       chatId: this.chatId,
