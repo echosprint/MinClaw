@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { createHandlers } from './mcp-handlers.js'
 
 const CHAT_ID = process.env.CHAT_ID ?? ''
-const HOST_URL = process.env.HOST_URL ?? 'http://host.docker.internal:3000'
+const HOST_URL = process.env.HOST_URL ?? 'http://host.docker.internal:13821'
 
 const server = new McpServer({ name: 'minclaw', version: '1.0.0' })
 const handlers = createHandlers(HOST_URL, CHAT_ID)

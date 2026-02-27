@@ -14,7 +14,7 @@ export interface RunPayload {
   history: Message[]
 }
 
-const HOST_URL = process.env.HOST_URL ?? 'http://host.docker.internal:3000'
+const HOST_URL = process.env.HOST_URL ?? 'http://host.docker.internal:13821'
 
 export async function run(payload: RunPayload): Promise<void> {
   const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -38,7 +38,7 @@ export async function run(payload: RunPayload): Promise<void> {
   for await (const msg of query({
     prompt,
     options: {
-      cwd: path.join(clauDir, '..'),
+      cwd: '/workspace',
       plugins: [{ type: 'local', path: path.join(clauDir, 'skills', 'agent-browser') }],
       allowedTools: [
         'Bash',

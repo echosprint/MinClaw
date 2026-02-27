@@ -78,7 +78,7 @@ Common cron patterns:
 
 ## Memory
 
-Use the `/app/memory/` directory to persist information across sessions:
+Use the `/workspace/memory/` directory to persist information across sessions:
 
 - Create topic files (e.g., `preferences.md`, `notes.md`)
 - Keep an index at `/app/memory/index.md`

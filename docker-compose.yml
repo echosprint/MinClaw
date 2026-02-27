@@ -2,13 +2,13 @@ services:
   agent:
     image: minclaw-agent:latest
     ports:
-      - "4000:4000"
+      - "14827:14827"
     environment:
       - CLAUDE_CODE_OAUTH_TOKEN=${CLAUDE_CODE_OAUTH_TOKEN}
-      - HOST_URL=http://host.docker.internal:3000
-      - SEARCH_API_KEY=${SEARCH_API_KEY}
-      - AGENT_PORT=4000
+      - HOST_URL=http://host.docker.internal:13821
+      - AGENT_PORT=14827
     volumes:
       - ./log:/app/log
+      - ./data/memory:/workspace/memory
     extra_hosts:
       - "host.docker.internal:host-gateway"

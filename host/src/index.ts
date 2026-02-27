@@ -7,7 +7,7 @@ import { run as agentRun } from './agent'
 import { log } from './log'
 import { mdToHtml } from './markdown'
 
-const HOST_PORT = Number(process.env.HOST_PORT ?? 3000)
+const HOST_PORT = Number(process.env.HOST_PORT ?? 13821)
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? ''
 
 if (!BOT_TOKEN) {
