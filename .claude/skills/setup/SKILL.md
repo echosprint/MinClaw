@@ -234,7 +234,7 @@ mkdir -p log data/db data/memory
 pnpm start
 ```
 
-This runs `docker compose up -d` (agent container) then `pnpm dev:host` (host process).
+This runs `docker compose up -d` (agent container, background) then `pnpm dev:host` (host process, **foreground — keep the terminal open**). The host logs appear directly in this terminal.
 
 **If `docker compose up -d` fails:**
 
@@ -266,16 +266,16 @@ Check host process is listening:
 lsof -i :13821 | grep LISTEN
 ```
 
-Check agent is reachable from host:
+Check agent container port is bound on host:
 
 ```bash
-curl -s -o /dev/null -w "%{http_code}" http://localhost:14827/health || echo "unreachable"
+lsof -i :14827 | grep LISTEN
 ```
 
 Tail logs to confirm no startup errors:
 
 ```bash
-tail -n 30 log/agent.log 2>/dev/null || echo "(no agent log yet)"
+tail -n 30 log/minclaw.log 2>/dev/null || echo "(no agent log yet)"
 ```
 
 ### 7b. End-to-end test
@@ -291,7 +291,7 @@ Tell the user:
 > If it works, setup is complete. Watch live logs with:
 >
 > ```bash
-> tail -f log/agent.log
+> tail -f log/minclaw.log
 > ```
 
 If the bot does not respond within 10 seconds, check logs before concluding success.
@@ -361,7 +361,7 @@ rm -rf data/memory/*
 
 **Bot responds in DMs but not in groups:** Group Privacy is enabled. Fix: `@BotFather` → `/mybots` → select bot → **Bot Settings** → **Group Privacy** → **Turn off**, then remove and re-add the bot to the group.
 
-**Agent not replying (bot receives but agent is silent):** Check `docker ps` — container must be running. Check `log/agent.log` for errors. Verify `CLAUDE_CODE_OAUTH_TOKEN` or `ANTHROPIC_API_KEY` is valid in `.env`. Check `AGENT_URL=http://localhost:14827` in `.env`.
+**Agent not replying (bot receives but agent is silent):** Check `docker ps` — container must be running. Check `log/minclaw.log` for errors. Verify `CLAUDE_CODE_OAUTH_TOKEN` or `ANTHROPIC_API_KEY` is valid in `.env`. Check that `AGENT_URL=http://localhost:14827` is set in `.env` — the code default falls back to port `4000`, so this key is required.
 
 **"Claude Code process exited with code 1":** The Claude credential in `.env` is invalid or expired. Re-run Phase 2c.
 
