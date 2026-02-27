@@ -1,7 +1,4 @@
 {
   "files": [],
-  "references": [
-    { "path": "agent" },
-    { "path": "host" }
-  ]
+  "references": [{ "path": "agent" }, { "path": "host" }]
 }

@@ -1,61 +1,97 @@
-import { log } from './log.js'
+import { log } from "./log.js";
 
-export type ToolResult = { content: [{ type: 'text'; text: string }] }
+export interface ToolResult {
+  content: [{ type: "text"; text: string }];
+}
 
-export function createHandlers(hostUrl: string, chatId: string) {
-  return {
-    async send_message({ text }: { text: string }): Promise<ToolResult> {
-      log.info(`send_message chatId=${chatId} text="${text.slice(0, 80)}"`)
-      const res = await fetch(`${hostUrl}/send`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chatId, text }),
-      })
-      const result = res.ok ? 'sent' : `error: ${res.status}`
-      log.info(`send_message result=${result}`)
-      return { content: [{ type: 'text' as const, text: result }] }
-    },
+interface Job {
+  id: number;
+  cron: string;
+  task: string;
+  next_run: number;
+  one_shot: number;
+}
 
-    async schedule_job({ cron, task, one_shot }: { cron: string; task: string; one_shot?: boolean }): Promise<ToolResult> {
-      log.info(`schedule_job chatId=${chatId} cron="${cron}" one_shot=${!!one_shot} task="${task}"`)
-      const res = await fetch(`${hostUrl}/schedule`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chatId, cron, task, one_shot }),
-      })
-      const data = await res.json() as { jobId?: number; error?: string }
-      if (!res.ok) {
-        const msg = data.error ?? `schedule failed: ${res.status}`
-        log.info(`schedule_job error=${msg}`)
-        return { content: [{ type: 'text' as const, text: msg }] }
-      }
-      log.info(`schedule_job result=jobId#${data.jobId}`)
-      return { content: [{ type: 'text' as const, text: `Scheduled job #${data.jobId}` }] }
-    },
+function ok(text: string): ToolResult {
+  return { content: [{ type: "text", text }] };
+}
 
-    async list_tasks(): Promise<ToolResult> {
-      log.info(`list_tasks chatId=${chatId}`)
-      const res = await fetch(`${hostUrl}/jobs?chatId=${encodeURIComponent(chatId)}`)
-      const jobs = await res.json() as Array<{ id: number; cron: string; task: string; next_run: number; one_shot: number }>
-      if (!jobs.length) return { content: [{ type: 'text' as const, text: 'No scheduled tasks.' }] }
-      const lines = jobs.map(j => {
-        const next = new Date(j.next_run).toLocaleString()
-        const type = j.one_shot ? 'one-time' : 'recurring'
-        return `- [#${j.id}] ${j.task.slice(0, 60)}${j.task.length > 60 ? '…' : ''} (${j.cron}, ${type}) — next: ${next}`
-      })
-      return { content: [{ type: 'text' as const, text: `Scheduled tasks:\n${lines.join('\n')}` }] }
-    },
+export class McpHandlers {
+  constructor(
+    private hostUrl: string,
+    private chatId: string,
+  ) {}
 
-    async cancel_task({ job_id }: { job_id: number }): Promise<ToolResult> {
-      log.info(`cancel_task chatId=${chatId} job_id=${job_id}`)
-      const res = await fetch(`${hostUrl}/cancel-job`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chatId, jobId: job_id }),
-      })
-      const data = await res.json() as { cancelled: boolean }
-      const text = data.cancelled ? `Job #${job_id} cancelled.` : `Job #${job_id} not found.`
-      return { content: [{ type: 'text' as const, text }] }
-    },
+  private get(path: string) {
+    return fetch(`${this.hostUrl}${path}`);
+  }
+
+  private post(path: string, body: unknown) {
+    return fetch(`${this.hostUrl}${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  }
+
+  async send_message({ text }: { text: string }): Promise<ToolResult> {
+    log.info(`send_message chatId=${this.chatId} text="${text.slice(0, 80)}"`);
+    const res = await this.post("/send", { chatId: this.chatId, text });
+    const result = res.ok ? "sent" : `error: ${res.status}`;
+    log.info(`send_message result=${result}`);
+    return ok(result);
+  }
+
+  async schedule_job({
+    cron,
+    task,
+    one_shot,
+  }: {
+    cron: string;
+    task: string;
+    one_shot?: boolean;
+  }): Promise<ToolResult> {
+    log.info(
+      `schedule_job chatId=${this.chatId} cron="${cron}" one_shot=${!!one_shot} task="${task}"`,
+    );
+    const res = await this.post("/schedule", {
+      chatId: this.chatId,
+      cron,
+      task,
+      one_shot,
+    });
+    const data = (await res.json()) as { jobId?: number; error?: string };
+    if (!res.ok) {
+      const msg = data.error ?? `schedule failed: ${res.status}`;
+      log.info(`schedule_job error=${msg}`);
+      return ok(msg);
+    }
+    log.info(`schedule_job result=jobId#${data.jobId}`);
+    return ok(`Scheduled job #${data.jobId}`);
+  }
+
+  async list_tasks(): Promise<ToolResult> {
+    log.info(`list_tasks chatId=${this.chatId}`);
+    const res = await this.get(`/jobs?chatId=${encodeURIComponent(this.chatId)}`);
+    const jobs = (await res.json()) as Job[];
+    if (!jobs.length) return ok("No scheduled tasks.");
+    const lines = jobs.map((j) => {
+      const next = new Date(j.next_run).toLocaleString();
+      const type = j.one_shot ? "one-time" : "recurring";
+      const task = j.task.length > 60 ? j.task.slice(0, 60) + "…" : j.task;
+      return `- [#${j.id}] ${task} (${j.cron}, ${type}) — next: ${next}`;
+    });
+    return ok(`Scheduled tasks:\n${lines.join("\n")}`);
+  }
+
+  async cancel_task({ job_id }: { job_id: number }): Promise<ToolResult> {
+    log.info(`cancel_task chatId=${this.chatId} job_id=${job_id}`);
+    const res = await this.post("/cancel-job", {
+      chatId: this.chatId,
+      jobId: job_id,
+    });
+    const data = (await res.json()) as { cancelled: boolean };
+    const msg = data.cancelled ? `Job #${job_id} cancelled.` : `Job #${job_id} not found.`;
+    return ok(msg);
   }
 }
