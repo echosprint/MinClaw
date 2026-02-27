@@ -11,7 +11,8 @@
     "start": "pnpm build && docker compose up -d && pnpm dev:host",
     "stop": "docker compose down; kill $(lsof -ti:13821) 2>/dev/null; true",
     "restart": "pnpm stop && pnpm build && pnpm start",
-    "clear-jobs": "cd host && node --require tsx/cjs scripts/clear-jobs.ts"
+    "clear-jobs": "cd host && node --require tsx/cjs scripts/clear-jobs.ts",
+    "clear-log": "rm -f log/minclaw.log"
   },
   "devDependencies": {
     "prettier": "^3.0.0"
