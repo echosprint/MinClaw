@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { describe, test, expect, vi, beforeAll, afterAll, beforeEach } from 'vitest'
 import http from 'http'
 import { createServer } from '../src/server.js'
@@ -33,9 +34,9 @@ describe('agent integration', () => {
 
   beforeAll(() => new Promise<void>(resolve => {
     // Mock host — receives send_message and schedule_job HTTP calls from MCP handlers
-    hostServer = http.createServer((req, res) => {
+    hostServer = http.createServer((req: http.IncomingMessage, res: http.ServerResponse) => {
       let body = ''
-      req.on('data', c => { body += c })
+      req.on('data', (c: Buffer) => { body += c })
       req.on('end', () => {
         const data = JSON.parse(body)
         res.writeHead(200, { 'Content-Type': 'application/json' })
@@ -132,9 +133,9 @@ describe('agent integration', () => {
     expect(sent[0]).toMatchObject({ chatId: 'user-3' })
     expect(sent[0].text).toContain('BTC')
 
-    // Verify runner configured the agent-browser tool
+    // Verify runner configured Bash (agent-browser skill scopes it when invoked)
     const opts = vi.mocked(query).mock.calls[0][0].options
-    expect(opts?.allowedTools).toContain('Bash(agent-browser:*)')
+    expect(opts?.allowedTools).toContain('Bash')
   })
 
   test('each message carries the correct chatId through the full stack', async () => {

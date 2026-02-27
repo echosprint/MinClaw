@@ -16,10 +16,10 @@ describe('runner', () => {
   })
 
   describe('agent-browser tool', () => {
-    test('allows Bash restricted to agent-browser commands', async () => {
+    test('allows Bash (agent-browser skill scopes it when invoked)', async () => {
       await run({ chatId: 'c1', message: 'browse google.com', history: [] })
       const { allowedTools } = mockQuery.mock.calls[0][0].options!
-      expect(allowedTools).toContain('Bash(agent-browser:*)')
+      expect(allowedTools).toContain('Bash')
     })
 
     test('loads agent-browser skill as a plugin', async () => {
