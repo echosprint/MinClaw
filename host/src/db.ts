@@ -1,4 +1,5 @@
 import Database from 'better-sqlite3'
+import fs from 'fs'
 
 export type Role = 'user' | 'assistant'
 
@@ -21,7 +22,8 @@ export interface Job {
 
 let _db: Database.Database
 
-export function init(path = './minclaw.db') {
+export function init(path = './data/minclaw.db') {
+  fs.mkdirSync('./data', { recursive: true })
   _db = new Database(path)
   _db.exec(`
     CREATE TABLE IF NOT EXISTS messages (
