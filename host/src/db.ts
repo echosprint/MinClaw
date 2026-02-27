@@ -23,8 +23,8 @@ export interface Job {
 
 let _db: Database.Database
 
-export function init(path = './data/minclaw.db') {
-  fs.mkdirSync('./data', { recursive: true })
+export function init(path = '../data/db/minclaw.db') {
+  fs.mkdirSync('../data/db', { recursive: true })
   _db = new Database(path)
   _db.exec(`
     CREATE TABLE IF NOT EXISTS messages (
