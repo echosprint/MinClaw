@@ -57,7 +57,9 @@ describe("MCP tool handlers", () => {
       const errorMsg = 'Invalid cron: "not-a-cron". Use format like "0 9 * * *"';
       vi.stubGlobal(
         "fetch",
-        vi.fn().mockResolvedValue(new Response(JSON.stringify({ error: errorMsg }), { status: 400 })),
+        vi
+          .fn()
+          .mockResolvedValue(new Response(JSON.stringify({ error: errorMsg }), { status: 400 })),
       );
       const h = new McpHandlers(HOST_URL, CHAT_ID);
 

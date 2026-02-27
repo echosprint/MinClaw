@@ -42,6 +42,13 @@ describe("agent server", () => {
     expect(runs.some((r) => r.chatId === "c2" && r.message === "test msg")).toBe(true);
   });
 
+  test("GET /health → { ok: true, claude: false } (no token in test env)", async () => {
+    const res = await fetch(`http://localhost:${PORT}/health`);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).toEqual({ ok: true, claude: false });
+  });
+
   test("unknown route → 404", async () => {
     const res = await fetch(`http://localhost:${PORT}/unknown`);
     expect(res.status).toBe(404);

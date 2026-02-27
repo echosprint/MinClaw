@@ -56,6 +56,10 @@ export function saveMessage(chatId: string, role: Role, content: string): void {
     .run(chatId, role, content, Date.now());
 }
 
+export function clearHistory(chatId: string): void {
+  _db.prepare("DELETE FROM messages WHERE chat_id = ?").run(chatId);
+}
+
 export function getHistory(chatId: string, limit = 20): Message[] {
   const rows = _db
     .prepare("SELECT * FROM messages WHERE chat_id = ? ORDER BY id DESC LIMIT ?")

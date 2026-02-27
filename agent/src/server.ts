@@ -34,7 +34,8 @@ export function createServer(deps: AgentServerDeps, port: number): http.Server {
       const route = `${req.method} ${req.url}`;
 
       if (route === "GET /health") {
-        respond(res, 200, { ok: true });
+        const claude = !!process.env.CLAUDE_CODE_OAUTH_TOKEN;
+        respond(res, 200, { ok: true, claude });
         return;
       }
 

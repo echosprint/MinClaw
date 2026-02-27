@@ -9,6 +9,8 @@ export interface BotDeps {
   saveMessage: (chatId: string, role: "user" | "assistant", content: string) => void;
   getHistory: (chatId: string) => Message[];
   runAgent: (payload: RunPayload) => Promise<void>;
+  clearHistory: (chatId: string) => void;
+  restartAgent: () => Promise<void>;
 }
 
 export function createBot(token: string, deps: BotDeps, botInfo?: UserFromGetMe): Bot {
@@ -17,6 +19,42 @@ export function createBot(token: string, deps: BotDeps, botInfo?: UserFromGetMe)
     ? { client: { baseFetchConfig: { agent: new HttpsProxyAgent(proxy) } } }
     : {};
   const bot = new Bot(token, { ...botConfig, ...(botInfo ? { botInfo } : {}) });
+
+  bot.command("chatid", async (ctx) => {
+    await ctx.reply(`Your chat ID: ${ctx.chat.id}`);
+  });
+
+  bot.command("ping", async (ctx) => {
+    const chatId = String(ctx.chat.id);
+    const pingMsg = "this message is ping, please only reply `ping successful`";
+
+    const historyBefore = deps.getHistory(chatId).map((m) => ({ role: m.role, content: m.content }));
+    const sentAt = Date.now();
+
+    deps.saveMessage(chatId, "user", pingMsg);
+    await deps.runAgent({ chatId, message: pingMsg, history: historyBefore });
+
+    await new Promise((r) => setTimeout(r, 10_000));
+
+    const historyAfter = deps.getHistory(chatId);
+    const replied = historyAfter.some((m) => m.role === "assistant" && m.created_at >= sentAt);
+
+    if (!replied) {
+      await ctx.reply("ping fails");
+    }
+  });
+
+  bot.command("clear", async (ctx) => {
+    const chatId = String(ctx.chat.id);
+    await ctx.reply("Clearing history and restarting agent...");
+    deps.clearHistory(chatId);
+    try {
+      await deps.restartAgent();
+      await ctx.reply("Done. Fresh start!");
+    } catch (err) {
+      await ctx.reply(`History cleared. Agent restart failed: ${err}`);
+    }
+  });
 
   bot.on("message:text", async (ctx) => {
     const chatId = String(ctx.chat.id);

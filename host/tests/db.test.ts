@@ -29,6 +29,14 @@ describe("db: messages", () => {
     const history = db.getHistory("chat3", 20);
     expect(history.length).toBe(20);
   });
+
+  test("clearHistory removes messages for that chatId only", () => {
+    db.saveMessage("chatA", "user", "msg A");
+    db.saveMessage("chatB", "user", "msg B");
+    db.clearHistory("chatA");
+    expect(db.getHistory("chatA").length).toBe(0);
+    expect(db.getHistory("chatB").length).toBeGreaterThan(0);
+  });
 });
 
 describe("db: jobs", () => {

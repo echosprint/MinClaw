@@ -3,7 +3,7 @@ import * as db from "./db";
 import { createBot } from "./bot";
 import { createServer } from "./server";
 import { start as startScheduler } from "./scheduler";
-import { run as agentRun } from "./agent";
+import { run as agentRun, restartAgent as agentRestartAgent } from "./agent";
 import { log } from "./log";
 import { mdToHtml } from "./markdown";
 
@@ -38,6 +38,8 @@ bot = createBot(BOT_TOKEN, {
   saveMessage: db.saveMessage.bind(db),
   getHistory: db.getHistory.bind(db),
   runAgent: agentRun,
+  clearHistory: db.clearHistory.bind(db),
+  restartAgent: agentRestartAgent,
 });
 bot.catch((err) => console.error("[bot] error:", err));
 bot
