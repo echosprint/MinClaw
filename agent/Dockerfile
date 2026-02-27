@@ -1,33 +1,4 @@
-FROM node:22-slim
-
-# System dependencies for Chromium (required by agent-browser)
-RUN apt-get update && apt-get install -y \
-    curl \
-    git \
-    chromium \
-    fonts-liberation \
-    fonts-noto-color-emoji \
-    libgbm1 \
-    libnss3 \
-    libatk-bridge2.0-0 \
-    libgtk-3-0 \
-    libx11-xcb1 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxrandr2 \
-    libasound2 \
-    libpangocairo-1.0-0 \
-    libcups2 \
-    libdrm2 \
-    libxshmfence1 \
-    && rm -rf /var/lib/apt/lists/*
-
-# Point agent-browser at the system Chromium
-ENV AGENT_BROWSER_EXECUTABLE_PATH=/usr/bin/chromium
-ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium
-
-# Global tools
-RUN npm install -g agent-browser @anthropic-ai/claude-code
+FROM minclaw-agent-base:latest
 
 WORKDIR /app
 COPY package*.json ./

@@ -1,12 +1,6 @@
 services:
   agent:
-    build:
-      context: ./agent
-      args:
-        - HTTP_PROXY=${DOCKER_BUILD_PROXY:-}
-        - HTTPS_PROXY=${DOCKER_BUILD_PROXY:-}
-        - http_proxy=${DOCKER_BUILD_PROXY:-}
-        - https_proxy=${DOCKER_BUILD_PROXY:-}
+    image: minclaw-agent:latest
     ports:
       - "4000:4000"
     environment:
