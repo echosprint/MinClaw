@@ -8,6 +8,8 @@ export function mdToHtml(text: string): string {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
+    // headings # ## ### → bold
+    .replace(/^#{1,6}\s+(.+)$/gm, '<b>$1</b>')
     // code blocks ```lang\n...\n```
     .replace(/```[\w]*\n?([\s\S]+?)```/g, '<pre>$1</pre>')
     // inline code `text`
