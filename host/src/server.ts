@@ -1,6 +1,7 @@
 import http from 'http'
 import { parseExpression } from 'cron-parser'
 import type { Role } from './db'
+import { log } from './log'
 
 export interface ServerDeps {
   sendToTelegram: (chatId: string, text: string) => Promise<void>
@@ -32,6 +33,7 @@ export function createServer(deps: ServerDeps, port: number): http.Server {
       const route = `${req.method} ${req.url}`
 
       if (route === 'POST /send') {
+        log.info(`send       chatId=${body.chatId} text="${body.text.slice(0, 80)}"`)
         await deps.sendToTelegram(body.chatId, body.text)
         deps.saveMessage(body.chatId, 'assistant', body.text)
         respond(res, 200)
@@ -42,15 +44,19 @@ export function createServer(deps: ServerDeps, port: number): http.Server {
         try {
           const nextRun = parseExpression(body.cron).next().toDate().getTime()
           const jobId = deps.saveJob(body.chatId, body.cron, body.task, nextRun)
+          log.info(`schedule   chatId=${body.chatId} cron="${body.cron}" jobId=${jobId}`)
           respond(res, 200, { jobId })
         } catch {
+          log.error(`schedule   invalid cron "${body.cron}"`)
           respond(res, 400, { error: 'Invalid cron expression' })
         }
         return
       }
 
+      log.error(`unknown route ${route}`)
       respond(res, 404)
     } catch (e) {
+      log.error(`server error ${e}`)
       respond(res, 500, { error: String(e) })
     }
   })

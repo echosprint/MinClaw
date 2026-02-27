@@ -4,6 +4,7 @@ import { createBot } from './bot'
 import { createServer } from './server'
 import { start as startScheduler } from './scheduler'
 import { run as agentRun } from './agent'
+import { log } from './log'
 
 const HOST_PORT = Number(process.env.HOST_PORT ?? 3000)
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? ''
@@ -28,7 +29,11 @@ const server = createServer(
 )
 
 // 3. Telegram bot
-bot = createBot(BOT_TOKEN)
+bot = createBot(BOT_TOKEN, {
+  saveMessage: db.saveMessage.bind(db),
+  getHistory: db.getHistory.bind(db),
+  runAgent: agentRun,
+})
 bot.catch(err => console.error('[bot] error:', err))
 bot.start({
   onStart: (info) => console.log(`[bot] polling started @${info.username}`),
@@ -44,4 +49,4 @@ startScheduler({
   runAgent: agentRun,
 })
 
-console.log(`MinClaw host running on :${HOST_PORT}`)
+log.info(`MinClaw host running on :${HOST_PORT}`)

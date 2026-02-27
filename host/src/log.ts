@@ -1,7 +1,8 @@
 import fs from 'fs'
 import path from 'path'
 
-const LOG_DIR = '/app/log'
+// host runs from MinClaw/host/, log dir is MinClaw/log/
+const LOG_DIR = path.join(process.cwd(), '..', 'log')
 const LOG_FILE = path.join(LOG_DIR, 'minclaw.log')
 const canWrite = fs.existsSync(LOG_DIR)
 
@@ -15,12 +16,12 @@ function write(line: string): void {
 
 export const log = {
   info(msg: string): void {
-    const line = `[${ts()}][agent][INFO] ${msg}`
+    const line = `[${ts()}][bot][INFO] ${msg}`
     console.log(line)
     write(line)
   },
   error(msg: string): void {
-    const line = `[${ts()}][agent][ERROR] ${msg}`
+    const line = `[${ts()}][bot][ERROR] ${msg}`
     console.error(line)
     write(line)
   },
