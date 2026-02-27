@@ -1,5 +1,6 @@
 import http from 'http'
 import type { RunPayload } from './runner.js'
+import { log } from './log.js'
 
 export interface AgentServerDeps {
   run: (payload: RunPayload) => Promise<void>
@@ -29,14 +30,17 @@ export function createServer(deps: AgentServerDeps, port: number): http.Server {
 
       if (route === 'POST /run') {
         const payload = await readBody(req) as RunPayload
+        log.info(`request  chatId=${payload.chatId} message="${payload.message.slice(0, 80)}"`)
         // 202 immediately — agent works async
         respond(res, 202)
-        deps.run(payload).catch(console.error)
+        deps.run(payload).catch(err => log.error(`run failed chatId=${payload.chatId} ${err}`))
         return
       }
 
+      log.error(`unknown route ${route}`)
       respond(res, 404)
     } catch (e) {
+      log.error(`server error ${e}`)
       respond(res, 500, { error: String(e) })
     }
   })

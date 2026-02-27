@@ -4,7 +4,7 @@ services:
     ports:
       - "4000:4000"
     environment:
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - CLAUDE_CODE_OAUTH_TOKEN=${CLAUDE_CODE_OAUTH_TOKEN}
       - HOST_URL=http://host.docker.internal:3000
       - SEARCH_API_KEY=${SEARCH_API_KEY}
       - AGENT_PORT=4000

@@ -1,6 +1,7 @@
 import { query } from '@anthropic-ai/claude-agent-sdk'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { log } from './log.js'
 
 export interface Message {
   role: 'user' | 'assistant'
@@ -31,7 +32,9 @@ export async function run(payload: RunPayload): Promise<void> {
   // .claude/skills/agent-browser is loaded as a plugin (agent-browser skill)
   const clauDir = path.join(__dirname, '..', '.claude')
 
-  for await (const _msg of query({
+  log.info(`run start  chatId=${payload.chatId}`)
+
+  for await (const msg of query({
     prompt,
     options: {
       cwd: path.join(clauDir, '..'),
@@ -60,6 +63,23 @@ export async function run(payload: RunPayload): Promise<void> {
       },
     },
   })) {
-    // agent communicates to user exclusively via MCP send_message tool
+    const m = msg as Record<string, unknown>
+    if (m.type === 'assistant') {
+      const content = (m.message as Record<string, unknown>)?.content
+      if (Array.isArray(content)) {
+        for (const block of content) {
+          const b = block as Record<string, unknown>
+          if (b.type === 'text') {
+            log.info(`agent text  "${String(b.text).slice(0, 100)}"`)
+          } else if (b.type === 'tool_use') {
+            log.info(`tool use    ${b.name}`)
+          }
+        }
+      }
+    } else if (m.type === 'result') {
+      log.info(`run result  subtype=${m.subtype}`)
+    }
   }
+
+  log.info(`run done   chatId=${payload.chatId}`)
 }
