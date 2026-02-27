@@ -2,7 +2,7 @@
 
 A minimal personal assistant powered by Claude AI. Message it on Telegram to browse the web, run code, schedule tasks, and more.
 
-Inspired by [OpenClaw](https://github.com/badass-courses/openclaw) and [NanoClaw](https://github.com/nanoclaw/nanoclaw). Under 1000 lines of code for a complete personal assistant — one Telegram channel, one agent container.
+Inspired by [OpenClaw](https://github.com/openclaw/openclaw) and [NanoClaw](https://github.com/qwibitai/nanoclaw). Under 1000 lines of code for a complete personal assistant — one Telegram channel, one agent container.
 
 ## Why I Built MinClaw
 
