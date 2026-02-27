@@ -16,6 +16,30 @@ export interface RunPayload {
 
 const HOST_URL = process.env.HOST_URL ?? "http://host.docker.internal:13821";
 
+const ALLOWED_TOOLS = [
+  // Core tools
+  "Bash",
+  "Read",
+  "Write",
+  "Edit",
+  "Glob",
+  "Grep",
+  "WebSearch",
+  "WebFetch",
+  "Task",
+  "TaskOutput",
+  "TaskStop",
+  "TodoWrite",
+  "ToolSearch",
+  "Skill",
+  "NotebookEdit",
+  // MinClaw MCP tools
+  "mcp__minclaw__send_message",
+  "mcp__minclaw__schedule_job",
+  "mcp__minclaw__list_tasks",
+  "mcp__minclaw__cancel_task",
+];
+
 export async function run(payload: RunPayload): Promise<void> {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   // always use compiled dist — works from src/ (dev) and dist/ (prod)
@@ -37,26 +61,11 @@ export async function run(payload: RunPayload): Promise<void> {
     prompt,
     options: {
       cwd: "/workspace",
-      plugins: [{ type: "local", path: path.join(clauDir, "skills", "agent-browser") }],
-      allowedTools: [
-        "Bash",
-        "Read",
-        "Write",
-        "Edit",
-        "Glob",
-        "Grep",
-        "WebSearch",
-        "WebFetch",
-        "Task",
-        "TaskOutput",
-        "TaskStop",
-        "TodoWrite",
-        "ToolSearch",
-        "Skill",
-        "NotebookEdit",
-        "mcp__minclaw__send_message",
-        "mcp__minclaw__schedule_job",
+      plugins: [
+        { type: "local", path: path.join(clauDir, "skills", "agent-browser") },
+        { type: "local", path: path.join(clauDir, "skills", "weather") },
       ],
+      allowedTools: ALLOWED_TOOLS,
       permissionMode: "bypassPermissions" as const,
       allowDangerouslySkipPermissions: true,
       settingSources: ["project", "user"] as SettingSource[],
