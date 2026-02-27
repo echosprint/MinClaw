@@ -137,7 +137,7 @@ async function runQuery(payload: RunPayload): Promise<void> {
         for (const block of content) {
           const b = block as Record<string, unknown>;
           if (b.type === "text") {
-            log.info(`agent text  "${String(b.text).slice(0, 100)}"`);
+            log.info(`agent text  "${String(b.text).slice(0, 500)}"`);
           } else if (b.type === "tool_use") {
             log.info(`tool use    ${b.name}`);
           }
