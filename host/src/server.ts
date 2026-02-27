@@ -47,15 +47,18 @@ export function createServer(deps: ServerDeps, port: number): http.Server {
 
       if (route === 'POST /schedule') {
         try {
-          const nextRun = parseExpression(body.cron).next().toDate().getTime()
-          const oneShot = body.one_shot === 'true'
-          const jobId = deps.saveJob(body.chatId, body.cron, body.task, nextRun, oneShot)
-          log.info(`schedule   chatId=${body.chatId} cron="${body.cron}" one_shot=${oneShot} jobId=${jobId}`)
-          respond(res, 200, { jobId })
+          parseExpression(body.cron)
         } catch {
-          log.error(`schedule   invalid cron "${body.cron}"`)
-          respond(res, 400, { error: 'Invalid cron expression' })
+          const error = `Invalid cron: "${body.cron}". Use format like "0 9 * * *" (daily 9am) or "*/5 * * * *" (every 5 min).`
+          log.error(`schedule   ${error}`)
+          respond(res, 400, { error })
+          return
         }
+        const nextRun = parseExpression(body.cron).next().toDate().getTime()
+        const oneShot = body.one_shot === 'true'
+        const jobId = deps.saveJob(body.chatId, body.cron, body.task, nextRun, oneShot)
+        log.info(`schedule   chatId=${body.chatId} cron="${body.cron}" one_shot=${oneShot} jobId=${jobId}`)
+        respond(res, 200, { jobId })
         return
       }
 

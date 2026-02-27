@@ -23,7 +23,12 @@ export function createHandlers(hostUrl: string, chatId: string) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ chatId, cron, task, one_shot }),
       })
-      const data = await res.json() as { jobId: number }
+      const data = await res.json() as { jobId?: number; error?: string }
+      if (!res.ok) {
+        const msg = data.error ?? `schedule failed: ${res.status}`
+        log.info(`schedule_job error=${msg}`)
+        return { content: [{ type: 'text' as const, text: msg }] }
+      }
       log.info(`schedule_job result=jobId#${data.jobId}`)
       return { content: [{ type: 'text' as const, text: `Scheduled job #${data.jobId}` }] }
     },
