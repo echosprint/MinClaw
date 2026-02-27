@@ -28,23 +28,30 @@ Host HTTP :13821   ←──────────────────  Ag
 
 - The agent container calls back to the host via `http://host.docker.internal:13821`
 - The MCP server runs as a subprocess inside the container, spawned by the Claude Agent SDK
-- `log/agent.log` is written inside the container and readable on the host via the volume mount
+- `log/minclaw.log` is shared: both agent (`[agent]` prefix) and host (`[bot]` prefix) append to it
 - `data/memory/` persists agent memory across runs
 
 ## Log Locations
 
-| Log             | Location                | Content                                                     |
-|-----------------|-------------------------|-------------------------------------------------------------|
-| **Agent logs**  | `log/agent.log`         | Container: run start/done, tool calls, errors               |
-| **Host stdout** | terminal / host process | Bot polling, scheduler ticks, `/send` and `/schedule` calls |
+| Log                    | Location            | Content                                                           |
+|------------------------|---------------------|-------------------------------------------------------------------|
+| **Agent** `[agent]`    | `log/minclaw.log`   | Run start/done, tool calls, send_message, errors (from container) |
+| **Host** `[bot]`       | `log/minclaw.log`   | Bot polling, scheduler ticks, `/send` and `/schedule` calls       |
 
-Watch both in real time:
+Both processes append to the same file. Watch in real time:
 
 ```bash
-# Agent (container)
-tail -f log/agent.log
+tail -f log/minclaw.log
+```
 
-# Host (if running via pnpm start, pipe stdout to a file or check terminal)
+Filter by source:
+
+```bash
+# Agent only
+grep '\[agent\]' log/minclaw.log | tail -20
+
+# Host only
+grep '\[bot\]' log/minclaw.log | tail -20
 ```
 
 ## Quick Diagnostic
@@ -84,7 +91,7 @@ echo -e "\n8. Log directory mounted?"
 [ -d log ] && echo "OK ($(ls log/ 2>/dev/null | wc -l | tr -d ' ') files)" || echo "MISSING — run: mkdir -p log"
 
 echo -e "\n9. Recent agent activity?"
-tail -5 log/agent.log 2>/dev/null || echo "(no agent log yet)"
+tail -5 log/minclaw.log 2>/dev/null || echo "(no agent log yet)"
 ```
 
 ## Common Issues
@@ -108,7 +115,7 @@ pnpm start
 **Check agent log for errors:**
 
 ```bash
-tail -50 log/agent.log
+tail -50 log/minclaw.log
 ```
 
 **Verify host can reach agent:**
@@ -130,7 +137,7 @@ If unreachable on Linux, check `docker-compose.yml` has `extra_hosts: host.docke
 
 ### 2. "Claude Code process exited with code 1"
 
-Seen in `log/agent.log` as `run result  subtype=error_during_run` or a crash.
+Seen in `log/minclaw.log` as `run result  subtype=error_during_run` or a crash.
 
 **Check the Claude credential:**
 
@@ -296,8 +303,8 @@ source .env
 curl -s -X POST http://localhost:14827/run \
   -H "Content-Type: application/json" \
   -d '{"chatId":"debug-test","message":"Say hello","history":[]}'
-# Returns 202 immediately; watch log/agent.log for the result
-tail -f log/agent.log
+# Returns 202 immediately; watch log/minclaw.log for the result
+tail -f log/minclaw.log
 ```
 
 ### Inspect image contents
