@@ -59,5 +59,20 @@ ONE-TIME REMINDERS — run \`date\` first to get current time, then calculate:
   handlers.schedule_job
 )
 
+server.registerTool(
+  'list_tasks',
+  { description: 'List all active scheduled tasks for this chat.' },
+  handlers.list_tasks
+)
+
+server.registerTool(
+  'cancel_task',
+  {
+    description: 'Cancel and deactivate a scheduled task by its ID. Use list_tasks first to find the ID.',
+    inputSchema: { job_id: z.number().int().describe('The task ID to cancel (from list_tasks)') },
+  },
+  handlers.cancel_task
+)
+
 const transport = new StdioServerTransport()
 server.connect(transport).catch(console.error)

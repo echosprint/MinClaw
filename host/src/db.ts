@@ -61,7 +61,7 @@ export function getHistory(chatId: string, limit = 20): Message[] {
   return rows.reverse()
 }
 
-export function saveJob(
+export function addJob(
   chatId: string,
   cron: string,
   task: string,
@@ -86,4 +86,17 @@ export function advanceJob(id: number, nextRun: number): void {
 
 export function deactivateJob(id: number): void {
   _db.prepare('UPDATE jobs SET active = 0 WHERE id = ?').run(id)
+}
+
+export function getActiveJobs(chatId: string): Job[] {
+  return _db.prepare(
+    'SELECT * FROM jobs WHERE chat_id = ? AND active = 1 ORDER BY id'
+  ).all(chatId) as Job[]
+}
+
+export function cancelJob(id: number, chatId: string): boolean {
+  const result = _db.prepare(
+    'UPDATE jobs SET active = 0 WHERE id = ? AND chat_id = ?'
+  ).run(id, chatId)
+  return result.changes > 0
 }

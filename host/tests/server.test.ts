@@ -15,7 +15,7 @@ describe('host server', () => {
       {
         sendToTelegram: async (chatId, text) => { sent.push({ chatId, text }) },
         saveMessage: (chatId, role, content) => { savedMsgs.push({ chatId, role, content }) },
-        saveJob: (chatId, cron, task, _nextRun) => {
+        addJob: (chatId, cron, task, _nextRun) => {
           savedJobs.push({ chatId, cron, task })
           return savedJobs.length
         },

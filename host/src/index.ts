@@ -24,7 +24,9 @@ const server = createServer(
   {
     sendToTelegram: async (chatId, text) => { await bot.api.sendMessage(chatId, mdToHtml(text), { parse_mode: 'HTML' }) },
     saveMessage: db.saveMessage.bind(db),
-    saveJob: db.saveJob.bind(db),
+    addJob: db.addJob.bind(db),
+    getActiveJobs: db.getActiveJobs.bind(db),
+    cancelJob: db.cancelJob.bind(db),
   },
   HOST_PORT
 )

@@ -37,26 +37,26 @@ describe('db: jobs', () => {
   })
 
   test('due jobs are returned when next_run is in the past', () => {
-    const id = db.saveJob('chat1', '* * * * *', 'check btc', Date.now() - 1000)
+    const id = db.addJob('chat1', '* * * * *', 'check btc', Date.now() - 1000)
     const due = db.getDueJobs()
     expect(due.some(j => j.id === id)).toBe(true)
   })
 
   test('future jobs are not returned as due', () => {
-    const id = db.saveJob('chat1', '0 16 * * *', 'check eth', Date.now() + 60_000)
+    const id = db.addJob('chat1', '0 16 * * *', 'check eth', Date.now() + 60_000)
     const due = db.getDueJobs()
     expect(due.some(j => j.id === id)).toBe(false)
   })
 
   test('advanceJob moves next_run to future so job leaves due list', () => {
-    const id = db.saveJob('chat1', '0 15 * * *', 'some task', Date.now() - 1000)
+    const id = db.addJob('chat1', '0 15 * * *', 'some task', Date.now() - 1000)
     db.advanceJob(id, Date.now() + 86_400_000)
     const due = db.getDueJobs()
     expect(due.some(j => j.id === id)).toBe(false)
   })
 
   test('deactivateJob removes job from due list permanently', () => {
-    const id = db.saveJob('chat1', '* * * * *', 'task', Date.now() - 1000)
+    const id = db.addJob('chat1', '* * * * *', 'task', Date.now() - 1000)
     db.deactivateJob(id)
     const due = db.getDueJobs()
     expect(due.some(j => j.id === id)).toBe(false)

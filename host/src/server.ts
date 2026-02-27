@@ -1,12 +1,14 @@
 import http from 'http'
 import { parseExpression } from 'cron-parser'
-import type { Role } from './db'
+import type { Job, Role } from './db'
 import { log } from './log'
 
 export interface ServerDeps {
   sendToTelegram: (chatId: string, text: string) => Promise<void>
   saveMessage: (chatId: string, role: Role, content: string) => void
-  saveJob: (chatId: string, cron: string, task: string, nextRun: number, oneShot?: boolean) => number
+  addJob: (chatId: string, cron: string, task: string, nextRun: number, oneShot?: boolean) => number
+  getActiveJobs: (chatId: string) => Job[]
+  cancelJob: (id: number, chatId: string) => boolean
 }
 
 function respond(res: http.ServerResponse, status: number, data?: unknown): void {
@@ -56,9 +58,22 @@ export function createServer(deps: ServerDeps, port: number): http.Server {
         }
         const nextRun = parseExpression(body.cron).next().toDate().getTime()
         const oneShot = body.one_shot === 'true'
-        const jobId = deps.saveJob(body.chatId, body.cron, body.task, nextRun, oneShot)
+        const jobId = deps.addJob(body.chatId, body.cron, body.task, nextRun, oneShot)
         log.info(`schedule   chatId=${body.chatId} cron="${body.cron}" one_shot=${oneShot} jobId=${jobId}`)
         respond(res, 200, { jobId })
+        return
+      }
+
+      if (route === 'GET /jobs') {
+        const chatId = new URL(req.url!, 'http://localhost').searchParams.get('chatId') ?? ''
+        const jobs = deps.getActiveJobs(chatId)
+        respond(res, 200, jobs)
+        return
+      }
+
+      if (route === 'POST /cancel-job') {
+        const cancelled = deps.cancelJob(Number(body.jobId), body.chatId)
+        respond(res, 200, { cancelled })
         return
       }
 
