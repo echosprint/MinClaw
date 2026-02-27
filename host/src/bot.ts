@@ -1,4 +1,4 @@
-import { Bot } from "grammy";
+import { Bot, type Context } from "grammy";
 import type { UserFromGetMe } from "@grammyjs/types";
 import { HttpsProxyAgent } from "https-proxy-agent";
 import type { RunPayload } from "./agent";
@@ -13,6 +13,10 @@ export interface BotDeps {
   restartAgent: () => Promise<void>;
 }
 
+type CommandHandler = (ctx: Context) => Promise<void>;
+
+const COMMANDS: Record<string, CommandHandler> = {} as Record<string, CommandHandler>;
+
 export function createBot(token: string, deps: BotDeps, botInfo?: UserFromGetMe): Bot {
   const proxy = process.env.HTTPS_PROXY;
   const botConfig = proxy
@@ -20,12 +24,12 @@ export function createBot(token: string, deps: BotDeps, botInfo?: UserFromGetMe)
     : {};
   const bot = new Bot(token, { ...botConfig, ...(botInfo ? { botInfo } : {}) });
 
-  bot.command("chatid", async (ctx) => {
-    await ctx.reply(`Your chat ID: ${ctx.chat.id}`);
-  });
+  COMMANDS.chatid = async (ctx) => {
+    await ctx.reply(`Your chat ID: ${ctx.chat!.id}`);
+  };
 
-  bot.command("ping", async (ctx) => {
-    const chatId = String(ctx.chat.id);
+  COMMANDS.ping = async (ctx) => {
+    const chatId = String(ctx.chat!.id);
     const pingMsg = "this message is ping, please only reply `ping successful`";
 
     const historyBefore = deps.getHistory(chatId).map((m) => ({ role: m.role, content: m.content }));
@@ -42,10 +46,10 @@ export function createBot(token: string, deps: BotDeps, botInfo?: UserFromGetMe)
     if (!replied) {
       await ctx.reply("ping fails");
     }
-  });
+  };
 
-  bot.command("clear", async (ctx) => {
-    const chatId = String(ctx.chat.id);
+  COMMANDS.clear = async (ctx) => {
+    const chatId = String(ctx.chat!.id);
     await ctx.reply("Clearing history and restarting agent...");
     deps.clearHistory(chatId);
     try {
@@ -54,11 +58,23 @@ export function createBot(token: string, deps: BotDeps, botInfo?: UserFromGetMe)
     } catch (err) {
       await ctx.reply(`History cleared. Agent restart failed: ${err}`);
     }
-  });
+  };
+
+  for (const [name, handler] of Object.entries(COMMANDS)) {
+    bot.command(name, handler);
+  }
 
   bot.on("message:text", async (ctx) => {
-    const chatId = String(ctx.chat.id);
+    const chatId = String(ctx.chat!.id);
     const text = ctx.message.text;
+
+    if (text.startsWith("/")) {
+      const cmd = text.slice(1).split(/[\s@]/)[0];
+      if (!(cmd in COMMANDS)) {
+        await ctx.reply(`Unknown command /${cmd}. Available: /${Object.keys(COMMANDS).join(", /")}`);
+      }
+      return;
+    }
 
     log.info(`bot recv   chatId=${chatId} text="${text.slice(0, 80)}"`);
 
