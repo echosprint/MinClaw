@@ -9,7 +9,7 @@ export interface RunPayload {
   history: Message[]
 }
 
-const AGENT_URL = process.env.AGENT_URL ?? 'http://localhost:4000'
+const AGENT_URL = process.env.AGENT_URL ?? 'http://localhost:14827'
 
 export async function run(payload: RunPayload): Promise<void> {
   await fetch(`${AGENT_URL}/run`, {

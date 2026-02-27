@@ -361,7 +361,7 @@ rm -rf data/memory/*
 
 **Bot responds in DMs but not in groups:** Group Privacy is enabled. Fix: `@BotFather` → `/mybots` → select bot → **Bot Settings** → **Group Privacy** → **Turn off**, then remove and re-add the bot to the group.
 
-**Agent not replying (bot receives but agent is silent):** Check `docker ps` — container must be running. Check `log/minclaw.log` for errors. Verify `CLAUDE_CODE_OAUTH_TOKEN` or `ANTHROPIC_API_KEY` is valid in `.env`. Check that `AGENT_URL=http://localhost:14827` is set in `.env` — the code default falls back to port `4000`, so this key is required.
+**Agent not replying (bot receives but agent is silent):** Check `docker ps` — container must be running. Check `log/minclaw.log` for errors. Verify `CLAUDE_CODE_OAUTH_TOKEN` or `ANTHROPIC_API_KEY` is valid in `.env`. Check that `AGENT_URL=http://localhost:14827` is set in `.env` (the code defaults to this value, but setting it explicitly makes it clear).
 
 **"Claude Code process exited with code 1":** The Claude credential in `.env` is invalid or expired. Re-run Phase 2c.
 
