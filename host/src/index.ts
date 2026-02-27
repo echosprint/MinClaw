@@ -59,4 +59,5 @@ startScheduler({
   runAgent: agentRun,
 });
 
+log.info("---------------------------");
 log.info(`MinClaw host running on :${HOST_PORT}`);
