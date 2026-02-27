@@ -5,6 +5,7 @@ import type { RunPayload } from './agent'
 export interface SchedulerDeps {
   getDueJobs: () => Job[]
   advanceJob: (id: number, nextRun: number) => void
+  deactivateJob: (id: number) => void
   runAgent: (payload: RunPayload) => Promise<void>
 }
 
@@ -13,8 +14,12 @@ export async function tick(deps: SchedulerDeps): Promise<void> {
   const jobs = deps.getDueJobs()
   for (const job of jobs) {
     await deps.runAgent({ chatId: job.chat_id, message: job.task, history: [] })
-    const next = parseExpression(job.cron).next().toDate().getTime()
-    deps.advanceJob(job.id, next)
+    if (job.one_shot) {
+      deps.deactivateJob(job.id)
+    } else {
+      const next = parseExpression(job.cron).next().toDate().getTime()
+      deps.advanceJob(job.id, next)
+    }
   }
 }
 

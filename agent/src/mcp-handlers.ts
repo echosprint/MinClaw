@@ -16,12 +16,12 @@ export function createHandlers(hostUrl: string, chatId: string) {
       return { content: [{ type: 'text' as const, text: result }] }
     },
 
-    async schedule_job({ cron, task }: { cron: string; task: string }): Promise<ToolResult> {
-      log.info(`schedule_job chatId=${chatId} cron="${cron}" task="${task}"`)
+    async schedule_job({ cron, task, one_shot }: { cron: string; task: string; one_shot?: boolean }): Promise<ToolResult> {
+      log.info(`schedule_job chatId=${chatId} cron="${cron}" one_shot=${!!one_shot} task="${task}"`)
       const res = await fetch(`${hostUrl}/schedule`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chatId, cron, task }),
+        body: JSON.stringify({ chatId, cron, task, one_shot }),
       })
       const data = await res.json() as { jobId: number }
       log.info(`schedule_job result=jobId#${data.jobId}`)

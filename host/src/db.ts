@@ -18,6 +18,7 @@ export interface Job {
   task: string
   next_run: number
   active: number
+  one_shot: number
 }
 
 let _db: Database.Database
@@ -39,9 +40,12 @@ export function init(path = './data/minclaw.db') {
       cron      TEXT    NOT NULL,
       task      TEXT    NOT NULL,
       next_run  INTEGER NOT NULL,
-      active    INTEGER DEFAULT 1
+      active    INTEGER DEFAULT 1,
+      one_shot  INTEGER DEFAULT 0
     );
   `)
+  // migrate existing db
+  try { _db.exec('ALTER TABLE jobs ADD COLUMN one_shot INTEGER DEFAULT 0') } catch {}
 }
 
 export function saveMessage(chatId: string, role: Role, content: string): void {
@@ -61,11 +65,12 @@ export function saveJob(
   chatId: string,
   cron: string,
   task: string,
-  nextRun: number
+  nextRun: number,
+  oneShot = false
 ): number {
   const result = _db.prepare(
-    'INSERT INTO jobs (chat_id, cron, task, next_run) VALUES (?, ?, ?, ?)'
-  ).run(chatId, cron, task, nextRun)
+    'INSERT INTO jobs (chat_id, cron, task, next_run, one_shot) VALUES (?, ?, ?, ?, ?)'
+  ).run(chatId, cron, task, nextRun, oneShot ? 1 : 0)
   return result.lastInsertRowid as number
 }
 

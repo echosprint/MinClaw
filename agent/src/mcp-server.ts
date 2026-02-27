@@ -21,10 +21,11 @@ server.registerTool(
 server.registerTool(
   'schedule_job',
   {
-    description: 'Schedule a recurring task using a cron expression',
+    description: 'Schedule a task using a cron expression. Use one_shot=true for one-time reminders.',
     inputSchema: {
       cron: z.string().describe('Cron expression e.g. "0 15 * * *"'),
       task: z.string().describe('Natural language task description'),
+      one_shot: z.boolean().optional().describe('If true, runs once then deactivates'),
     },
   },
   handlers.schedule_job

@@ -1,4 +1,4 @@
-import { query } from '@anthropic-ai/claude-agent-sdk'
+import { query, type SettingSource } from '@anthropic-ai/claude-agent-sdk'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { log } from './log.js'
@@ -18,7 +18,8 @@ const HOST_URL = process.env.HOST_URL ?? 'http://host.docker.internal:3000'
 
 export async function run(payload: RunPayload): Promise<void> {
   const __dirname = path.dirname(fileURLToPath(import.meta.url))
-  const mcpServerPath = path.join(__dirname, 'mcp-server.js')
+  // always use compiled dist — works from src/ (dev) and dist/ (prod)
+  const mcpServerPath = path.resolve(__dirname, '..', 'dist', 'mcp-server.js')
 
   const context = payload.history
     .map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`)
@@ -51,6 +52,7 @@ export async function run(payload: RunPayload): Promise<void> {
       ],
       permissionMode: 'bypassPermissions' as const,
       allowDangerouslySkipPermissions: true,
+      settingSources: ['project', 'user'] as SettingSource[],
       mcpServers: {
         minclaw: {
           command: 'node',

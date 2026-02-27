@@ -30,24 +30,43 @@ Here are today's highlights...
 
 ## Telegram Formatting
 
-Telegram supports Markdown. Use it freely:
+Write messages in standard Markdown — it is automatically converted for Telegram:
 
-- **Bold** (`*bold*` or `**bold**`)
-- _Italic_ (`_italic_`)
-- `inline code`
-- ` ``` `code blocks` ``` `
-- [Links](https://example.com)
+- `**bold**`, `_italic_`, `` `code` ``, ` ```code block``` `
+- `[label](url)` for links
 
 Keep messages concise and readable.
 
 ## Scheduling
 
-To schedule a recurring task use `mcp__minclaw__schedule_job`:
+Use `mcp__minclaw__schedule_job` to schedule tasks.
+
+### One-time reminders
+
+Use `one_shot: true` — the job runs once then deactivates. Examples:
+
+```text
+# "in 10 minutes" — run `date` to get current time, calculate target minute
+mcp__minclaw__schedule_job(cron: "33 15 * * *",   task: "...", one_shot: true)
+
+# "next Friday at 5pm"
+mcp__minclaw__schedule_job(cron: "0 17 * * 5",    task: "...", one_shot: true)
+
+# "March 3rd at 7:12pm"
+mcp__minclaw__schedule_job(cron: "12 19 3 3 *",   task: "...", one_shot: true)
+
+# "tomorrow at 9am"
+mcp__minclaw__schedule_job(cron: "0 9 * * *",     task: "...", one_shot: true)
+```
+
+For relative times ("in X minutes/hours"), run `date` via Bash first to get the current time.
+
+### Recurring tasks
 
 ```text
 mcp__minclaw__schedule_job(
-  cron: "0 9 * * *",        # cron expression
-  task: "Send morning market summary"  # natural language description
+  cron: "0 9 * * *",
+  task: "Send morning market summary"
 )
 ```
 

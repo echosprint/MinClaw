@@ -9,7 +9,8 @@
     "build": "agent/build.sh",
     "start": "docker compose up -d && pnpm dev:host",
     "stop": "docker compose down && pkill -f 'minclaw-host' 2>/dev/null; lsof -ti :3000 | xargs kill -9 2>/dev/null; true",
-    "reload": "pnpm stop && pnpm build && pnpm start"
+    "reload": "pnpm stop && pnpm build && pnpm start",
+    "clear-jobs": "cd host && node --require tsx/cjs scripts/clear-jobs.ts"
   },
   "pnpm": {
     "onlyBuiltDependencies": ["better-sqlite3", "esbuild"]

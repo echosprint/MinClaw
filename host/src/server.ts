@@ -6,7 +6,7 @@ import { log } from './log'
 export interface ServerDeps {
   sendToTelegram: (chatId: string, text: string) => Promise<void>
   saveMessage: (chatId: string, role: Role, content: string) => void
-  saveJob: (chatId: string, cron: string, task: string, nextRun: number) => number
+  saveJob: (chatId: string, cron: string, task: string, nextRun: number, oneShot?: boolean) => number
 }
 
 function respond(res: http.ServerResponse, status: number, data?: unknown): void {
@@ -43,8 +43,9 @@ export function createServer(deps: ServerDeps, port: number): http.Server {
       if (route === 'POST /schedule') {
         try {
           const nextRun = parseExpression(body.cron).next().toDate().getTime()
-          const jobId = deps.saveJob(body.chatId, body.cron, body.task, nextRun)
-          log.info(`schedule   chatId=${body.chatId} cron="${body.cron}" jobId=${jobId}`)
+          const oneShot = body.one_shot === 'true' || body.one_shot === true
+          const jobId = deps.saveJob(body.chatId, body.cron, body.task, nextRun, oneShot)
+          log.info(`schedule   chatId=${body.chatId} cron="${body.cron}" one_shot=${oneShot} jobId=${jobId}`)
           respond(res, 200, { jobId })
         } catch {
           log.error(`schedule   invalid cron "${body.cron}"`)

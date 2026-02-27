@@ -5,6 +5,7 @@ import { createServer } from './server'
 import { start as startScheduler } from './scheduler'
 import { run as agentRun } from './agent'
 import { log } from './log'
+import { mdToHtml } from './markdown'
 
 const HOST_PORT = Number(process.env.HOST_PORT ?? 3000)
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? ''
@@ -21,7 +22,7 @@ db.init()
 let bot: Bot
 const server = createServer(
   {
-    sendToTelegram: (chatId, text) => bot.api.sendMessage(chatId, text),
+    sendToTelegram: (chatId, text) => bot.api.sendMessage(chatId, mdToHtml(text), { parse_mode: 'HTML' }),
     saveMessage: db.saveMessage.bind(db),
     saveJob: db.saveJob.bind(db),
   },
@@ -46,6 +47,7 @@ bot.start({
 startScheduler({
   getDueJobs: db.getDueJobs.bind(db),
   advanceJob: db.advanceJob.bind(db),
+  deactivateJob: db.deactivateJob.bind(db),
   runAgent: agentRun,
 })
 
