@@ -89,16 +89,19 @@ Use `mcp__minclaw__list_tasks` to show all active scheduled tasks for this chat:
 
 ```text
 mcp__minclaw__list_tasks()
-# → - [#3] Morning market summary (0 9 * * *, recurring) — next: ...
+# → - #1 Morning market summary (0 9 * * *, recurring) — next: ... [job_id:3]
+#   - #2 Wake-up reminder (one-time) — next: ... [job_id:7]
 ```
+
+The `[job_id:N]` at the end is for internal use only — do **not** show it to the user. Show only the `#1`, `#2`... index and task name.
 
 When the user asks to delete or cancel a task, **always follow this workflow**:
 
 1. Call `mcp__minclaw__list_tasks` to fetch all active tasks
 2. Identify the most relevant task based on the user's description
 3. Confirm with the user via `send_message` before cancelling, e.g.:
-   > Found: **#3 — Morning market summary** (every day at 09:00). Cancel this one?
-4. Only call `mcp__minclaw__cancel_task` after the user confirms
+   > Found: **#1 — Morning market summary** (every day at 09:00). Cancel this one?
+4. Extract the `job_id` from `[job_id:N]` and call `mcp__minclaw__cancel_task` after the user confirms
 
 ```text
 mcp__minclaw__cancel_task(job_id: 3)

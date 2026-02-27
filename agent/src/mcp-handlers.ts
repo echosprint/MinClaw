@@ -62,12 +62,12 @@ export function createHandlers(hostUrl: string, chatId: string, timezone?: strin
     if (!res.ok) return ok(`list_tasks failed: ${res.status}`);
     const jobs = (await res.json()) as Job[];
     if (!jobs.length) return ok("No scheduled tasks.");
-    const lines = jobs.map((j) => {
+    const lines = jobs.map((j, i) => {
       const next = new Date(j.next_run).toLocaleString("en-US", { timeZone: timezone });
       const type = j.one_shot ? "one-time" : "recurring";
       const cp = [...j.task];
       const task = cp.length > 60 ? cp.slice(0, 60).join("") + "…" : j.task;
-      return `- [#${j.id}] ${task} (${j.cron}, ${type}) — next: ${next}`;
+      return `- #${i + 1} ${task} (${j.cron}, ${type}) — next: ${next} [job_id:${j.id}]`;
     });
     return ok(`Scheduled tasks:\n${lines.join("\n")}`);
   };
