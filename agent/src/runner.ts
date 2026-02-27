@@ -12,7 +12,6 @@ export interface RunPayload {
   chatId: string;
   message: string;
   history: Message[];
-  timezone: string;
   timestamp: string;
 }
 
@@ -86,6 +85,7 @@ const ALLOWED_TOOLS = [
   "mcp__minclaw__schedule_job",
   "mcp__minclaw__list_tasks",
   "mcp__minclaw__cancel_task",
+  "mcp__minclaw__get_local_time",
 ];
 
 async function runQuery(payload: RunPayload): Promise<void> {
@@ -97,8 +97,7 @@ async function runQuery(payload: RunPayload): Promise<void> {
     .map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`)
     .join("\n");
 
-  const tzNote = `[User timezone: ${payload.timezone}, current time: ${new Date(payload.timestamp).toLocaleString("en-US", { timeZone: payload.timezone })}]\n\n`;
-  const prompt = tzNote + (context ? `${context}\n\nUser: ${payload.message}` : payload.message);
+  const prompt = context ? `${context}\n\nUser: ${payload.message}` : payload.message;
 
   // .claude/CLAUDE.md is auto-loaded as project context (persona + communication rules)
   // .claude/skills/agent-browser is loaded as a plugin (agent-browser skill)
@@ -125,6 +124,7 @@ async function runQuery(payload: RunPayload): Promise<void> {
           env: {
             CHAT_ID: payload.chatId,
             HOST_URL,
+            TZ: process.env.TZ ?? "UTC",
           },
         },
       },

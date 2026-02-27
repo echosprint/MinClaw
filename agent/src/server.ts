@@ -42,7 +42,7 @@ export function createServer(deps: AgentServerDeps, port: number): http.Server {
       if (route === "POST /run") {
         const payload = (await readBody(req)) as RunPayload;
         log.info(
-          `request  chatId=${payload.chatId} tz=${payload.timezone} ts=${payload.timestamp} message="${payload.message.slice(0, 80)}"`,
+          `request  chatId=${payload.chatId} ts=${payload.timestamp} message="${payload.message.slice(0, 80)}"`,
         );
         // 202 immediately — agent works async
         respond(res, 202);

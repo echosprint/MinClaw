@@ -5,9 +5,8 @@ import { createHandlers } from "./mcp-handlers.js";
 
 const CHAT_ID = process.env.CHAT_ID ?? "";
 const HOST_URL = process.env.HOST_URL ?? "http://host.docker.internal:13821";
-
 const server = new McpServer({ name: "minclaw", version: "1.0.0" });
-const handlers = createHandlers(HOST_URL, CHAT_ID);
+const handlers = createHandlers(HOST_URL, CHAT_ID, process.env.TZ);
 
 server.registerTool(
   "send_message",
@@ -53,7 +52,7 @@ RECURRING vs ONE-TIME:
 • Recurring: omit one_shot (default). Fires on every matching tick.
 • One-time: set one_shot=true. Fires once at the next matching tick, then deactivates.
 
-ONE-TIME REMINDERS — run \`date\` first to get current time, then calculate:
+ONE-TIME REMINDERS — call get_local_time first to get current time, then calculate:
 • In 10 min (currently 14:22) → "32 14 * * *"  one_shot=true
 • Tomorrow 9am                → "0 9 * * *"    one_shot=true
 • Next Friday 5pm             → "0 17 * * 5"   one_shot=true`,
@@ -96,6 +95,15 @@ server.registerTool(
     inputSchema: { job_id: z.number().int().describe("The task ID to cancel (from list_tasks)") },
   },
   handlers.cancel_task,
+);
+
+server.registerTool(
+  "get_local_time",
+  {
+    description:
+      "Get the current local time and timezone. Use this when you need the precise current time, especially inside scheduled jobs where the message timestamp may be stale.",
+  },
+  handlers.get_local_time,
 );
 
 const transport = new StdioServerTransport();

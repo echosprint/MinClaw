@@ -18,6 +18,14 @@ if ! ${RUNTIME} image inspect minclaw-agent-base:latest &>/dev/null; then
   ${RUNTIME} build -f Dockerfile.base -t minclaw-agent-base:latest .
 fi
 
+TZ=$(readlink /etc/localtime | sed 's|.*zoneinfo/||')
+# Inject TZ into .env so docker compose picks it up for ${TZ} substitution
+if grep -q "^TZ=" ../.env 2>/dev/null; then
+  sed -i '' "s|^TZ=.*|TZ=${TZ}|" ../.env
+else
+  echo "TZ=${TZ}" >> ../.env
+fi
+
 echo "Building agent image..."
 ${RUNTIME} build -q -t minclaw-agent:latest . > /dev/null
 echo "Done: minclaw-agent:latest"

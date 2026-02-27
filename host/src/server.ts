@@ -43,7 +43,8 @@ export function createServer(deps: ServerDeps, port: number): http.Server {
   const server = http.createServer(async (req, res) => {
     try {
       const body = (await readBody(req)) as Record<string, string>;
-      const route = `${req.method} ${req.url}`;
+      const url = new URL(req.url!, "http://localhost");
+      const route = `${req.method} ${url.pathname}`;
 
       if (route === "GET /health") {
         respond(res, 200, { ok: true });
@@ -74,7 +75,7 @@ export function createServer(deps: ServerDeps, port: number): http.Server {
           return;
         }
         const nextRun = parseExpression(body.cron).next().toDate().getTime();
-        const oneShot = body.one_shot === "true";
+        const oneShot = Boolean(body.one_shot);
         const jobId = deps.addJob(body.chatId, body.cron, body.task, nextRun, oneShot);
         log.info(
           `schedule   chatId=${body.chatId} cron="${body.cron}" one_shot=${oneShot} jobId=${jobId}`,

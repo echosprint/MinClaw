@@ -17,7 +17,7 @@ function ok(text: string): ToolResult {
   return { content: [{ type: "text", text }] };
 }
 
-export function createHandlers(hostUrl: string, chatId: string) {
+export function createHandlers(hostUrl: string, chatId: string, timezone?: string) {
   const get = (path: string) => fetch(`${hostUrl}${path}`);
 
   const post = (path: string, body: unknown) =>
@@ -62,7 +62,7 @@ export function createHandlers(hostUrl: string, chatId: string) {
     const jobs = (await res.json()) as Job[];
     if (!jobs.length) return ok("No scheduled tasks.");
     const lines = jobs.map((j) => {
-      const next = new Date(j.next_run).toLocaleString();
+      const next = new Date(j.next_run).toLocaleString("en-US", { timeZone: timezone });
       const type = j.one_shot ? "one-time" : "recurring";
       const task = j.task.length > 60 ? j.task.slice(0, 60) + "…" : j.task;
       return `- [#${j.id}] ${task} (${j.cron}, ${type}) — next: ${next}`;
@@ -78,5 +78,12 @@ export function createHandlers(hostUrl: string, chatId: string) {
     return ok(msg);
   };
 
-  return { send_message, schedule_job, list_tasks, cancel_task };
+  const get_local_time = async (): Promise<ToolResult> => {
+    const tz = timezone ?? "UTC";
+    const now = new Date();
+    const localTime = now.toLocaleString("en-US", { timeZone: tz });
+    return ok(`Current time: ${localTime} (${tz})`);
+  };
+
+  return { send_message, schedule_job, list_tasks, cancel_task, get_local_time };
 }

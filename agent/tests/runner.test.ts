@@ -10,7 +10,7 @@ import { enqueue } from "../src/runner.js";
 
 const mockQuery = vi.mocked(query);
 const flush = () => new Promise<void>((r) => setTimeout(r, 0));
-const basePayload = { timezone: "UTC", timestamp: new Date().toISOString() };
+const basePayload = { timestamp: new Date().toISOString() };
 
 describe("runner", () => {
   beforeEach(() => {
