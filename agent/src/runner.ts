@@ -49,9 +49,7 @@ const globalStream = new MessageStream();
 
 async function drainMessages(): Promise<never> {
   for await (const p of globalStream) {
-    await runQuery(p).catch((err) =>
-      log.error(`runQuery error chatId=${p.chatId}: ${err}`)
-    );
+    await runQuery(p).catch((err) => log.error(`runQuery error chatId=${p.chatId}: ${err}`));
   }
   log.error("globalStream ended unexpectedly");
   process.exit(1);

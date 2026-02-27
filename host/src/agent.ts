@@ -1,3 +1,5 @@
+import { log } from "./log.js";
+
 export interface Message {
   role: "user" | "assistant";
   content: string;
@@ -14,10 +16,14 @@ const AGENT_URL = process.env.AGENT_URL ?? "http://localhost:14827";
 const TIMEZONE = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 export async function run(payload: RunPayload): Promise<void> {
+  const body = { ...payload, timezone: TIMEZONE, timestamp: new Date().toISOString() };
+  log.info(
+    `agent send chatId=${payload.chatId} tz=${TIMEZONE} msg="${payload.message.slice(0, 80)}"`,
+  );
   await fetch(`${AGENT_URL}/run`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ...payload, timezone: TIMEZONE, timestamp: new Date().toISOString() }),
+    body: JSON.stringify(body),
   });
 }
 
