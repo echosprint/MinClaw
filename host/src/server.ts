@@ -32,6 +32,11 @@ export function createServer(deps: ServerDeps, port: number): http.Server {
       const body = await readBody(req) as Record<string, string>
       const route = `${req.method} ${req.url}`
 
+      if (route === 'GET /health') {
+        respond(res, 200, { ok: true })
+        return
+      }
+
       if (route === 'POST /send') {
         log.info(`send       chatId=${body.chatId} text="${body.text.slice(0, 80)}"`)
         await deps.sendToTelegram(body.chatId, body.text)

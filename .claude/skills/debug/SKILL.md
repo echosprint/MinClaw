@@ -83,9 +83,8 @@ docker ps --filter name=minclaw --format "{{.Names}} {{.Status}}" | grep -q minc
 echo -e "\n6. Host listening on :13821?"
 lsof -i :13821 | grep -q LISTEN && echo "OK" || echo "NOT RUNNING"
 
-echo -e "\n7. Agent reachable on :14827?"
-curl -s -o /dev/null -w "%{http_code}" http://localhost:14827/health 2>/dev/null \
-  | grep -q "^[24]" && echo "OK" || echo "UNREACHABLE"
+echo -e "\n7. Agent container port bound on :14827?"
+lsof -i :14827 | grep -q LISTEN && echo "OK" || echo "UNREACHABLE"
 
 echo -e "\n8. Log directory mounted?"
 [ -d log ] && echo "OK ($(ls log/ 2>/dev/null | wc -l | tr -d ' ') files)" || echo "MISSING — run: mkdir -p log"
@@ -272,7 +271,7 @@ Jobs are stored in `data/db/minclaw.db` and run by the host scheduler.
 sqlite3 data/db/minclaw.db "SELECT id, chat_id, cron, task, one_shot, active, datetime(next_run/1000,'unixepoch') as next_run FROM jobs"
 ```
 
-**Check scheduler ticks** in host stdout — look for `[scheduler]` lines.
+**Check scheduler-triggered runs** in `log/minclaw.log` — look for `[agent][INFO] run start` entries that appear without a preceding `[bot][INFO] bot recv` (those are scheduler-fired, not user messages).
 
 **Force a tick** (development only — restart the host process):
 

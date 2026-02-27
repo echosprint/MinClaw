@@ -28,6 +28,11 @@ export function createServer(deps: AgentServerDeps, port: number): http.Server {
     try {
       const route = `${req.method} ${req.url}`
 
+      if (route === 'GET /health') {
+        respond(res, 200, { ok: true })
+        return
+      }
+
       if (route === 'POST /run') {
         const payload = await readBody(req) as RunPayload
         log.info(`request  chatId=${payload.chatId} message="${payload.message.slice(0, 80)}"`)
