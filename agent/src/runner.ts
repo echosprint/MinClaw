@@ -16,6 +16,54 @@ export interface RunPayload {
 
 const HOST_URL = process.env.HOST_URL ?? "http://host.docker.internal:13821";
 
+class MessageStream {
+  private queue: RunPayload[] = [];
+  private waiting: (() => void) | null = null;
+  private done = false;
+
+  push(payload: RunPayload): void {
+    this.queue.push(payload);
+    this.waiting?.();
+  }
+
+  end(): void {
+    this.done = true;
+    this.waiting?.();
+  }
+
+  async *[Symbol.asyncIterator](): AsyncGenerator<RunPayload> {
+    while (true) {
+      while (this.queue.length > 0) yield this.queue.shift()!;
+      if (this.done) return;
+      await new Promise<void>((r) => {
+        this.waiting = r;
+      });
+      this.waiting = null;
+    }
+  }
+}
+
+const globalStream = new MessageStream();
+
+async function drainMessages(): Promise<never> {
+  for await (const p of globalStream) {
+    await runQuery(p).catch((err) =>
+      log.error(`runQuery error chatId=${p.chatId}: ${err}`)
+    );
+  }
+  log.error("globalStream ended unexpectedly");
+  process.exit(1);
+}
+
+// Start the drain loop: runs for the lifetime of the process, processing
+// one message at a time. enqueue() feeds payloads in; errors per-message
+// are logged and skipped so the loop never stops.
+void drainMessages();
+
+export function enqueue(payload: RunPayload): void {
+  globalStream.push(payload);
+}
+
 const ALLOWED_TOOLS = [
   // Core tools
   "Bash",
@@ -40,7 +88,7 @@ const ALLOWED_TOOLS = [
   "mcp__minclaw__cancel_task",
 ];
 
-export async function run(payload: RunPayload): Promise<void> {
+async function runQuery(payload: RunPayload): Promise<void> {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   // always use compiled dist — works from src/ (dev) and dist/ (prod)
   const mcpServerPath = path.resolve(__dirname, "..", "dist", "mcp-server.js");

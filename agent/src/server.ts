@@ -3,7 +3,7 @@ import type { RunPayload } from "./runner.js";
 import { log } from "./log.js";
 
 export interface AgentServerDeps {
-  run: (payload: RunPayload) => Promise<void>;
+  enqueue: (payload: RunPayload) => void;
 }
 
 function respond(res: http.ServerResponse, status: number, data?: unknown): void {
@@ -44,7 +44,7 @@ export function createServer(deps: AgentServerDeps, port: number): http.Server {
         log.info(`request  chatId=${payload.chatId} message="${payload.message.slice(0, 80)}"`);
         // 202 immediately — agent works async
         respond(res, 202);
-        deps.run(payload).catch((err) => log.error(`run failed chatId=${payload.chatId} ${err}`));
+        deps.enqueue(payload);
         return;
       }
 

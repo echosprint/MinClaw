@@ -6,9 +6,10 @@ vi.mock("@anthropic-ai/claude-agent-sdk", () => ({
 }));
 
 import { query } from "@anthropic-ai/claude-agent-sdk";
-import { run } from "../src/runner.js";
+import { enqueue } from "../src/runner.js";
 
 const mockQuery = vi.mocked(query);
+const flush = () => new Promise<void>((r) => setTimeout(r, 0));
 
 describe("runner", () => {
   beforeEach(() => {
@@ -17,13 +18,15 @@ describe("runner", () => {
 
   describe("agent-browser tool", () => {
     test("allows Bash (agent-browser skill scopes it when invoked)", async () => {
-      await run({ chatId: "c1", message: "browse google.com", history: [] });
+      enqueue({ chatId: "c1", message: "browse google.com", history: [] });
+      await flush();
       const { allowedTools } = mockQuery.mock.calls[0][0].options!;
       expect(allowedTools).toContain("Bash");
     });
 
     test("loads agent-browser skill as a plugin", async () => {
-      await run({ chatId: "c1", message: "browse", history: [] });
+      enqueue({ chatId: "c1", message: "browse", history: [] });
+      await flush();
       const { plugins } = mockQuery.mock.calls[0][0].options!;
       expect(plugins).toEqual(
         expect.arrayContaining([
@@ -38,13 +41,15 @@ describe("runner", () => {
 
   describe("send_message tool", () => {
     test("allows mcp__minclaw__send_message", async () => {
-      await run({ chatId: "c1", message: "hi", history: [] });
+      enqueue({ chatId: "c1", message: "hi", history: [] });
+      await flush();
       const { allowedTools } = mockQuery.mock.calls[0][0].options!;
       expect(allowedTools).toContain("mcp__minclaw__send_message");
     });
 
     test("configures minclaw MCP server with chatId env", async () => {
-      await run({ chatId: "user-99", message: "hi", history: [] });
+      enqueue({ chatId: "user-99", message: "hi", history: [] });
+      await flush();
       const { mcpServers } = mockQuery.mock.calls[0][0].options!;
       const minclaw = mcpServers?.minclaw as McpStdioServerConfig | undefined;
       expect(minclaw?.env?.CHAT_ID).toBe("user-99");
@@ -53,7 +58,8 @@ describe("runner", () => {
 
   describe("schedule_job tool", () => {
     test("allows mcp__minclaw__schedule_job", async () => {
-      await run({ chatId: "c1", message: "remind me daily", history: [] });
+      enqueue({ chatId: "c1", message: "remind me daily", history: [] });
+      await flush();
       const { allowedTools } = mockQuery.mock.calls[0][0].options!;
       expect(allowedTools).toContain("mcp__minclaw__schedule_job");
     });
@@ -61,12 +67,13 @@ describe("runner", () => {
 
   describe("prompt building", () => {
     test("passes plain message when no history", async () => {
-      await run({ chatId: "c1", message: "standalone", history: [] });
+      enqueue({ chatId: "c1", message: "standalone", history: [] });
+      await flush();
       expect(mockQuery.mock.calls[0][0].prompt).toBe("standalone");
     });
 
     test("prepends formatted history before the new message", async () => {
-      await run({
+      enqueue({
         chatId: "c1",
         message: "what next?",
         history: [
@@ -74,6 +81,7 @@ describe("runner", () => {
           { role: "assistant", content: "hi there" },
         ],
       });
+      await flush();
       const { prompt } = mockQuery.mock.calls[0][0];
       expect(prompt).toContain("User: hello");
       expect(prompt).toContain("Assistant: hi there");

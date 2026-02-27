@@ -12,7 +12,7 @@ describe("agent server", () => {
   beforeAll(() => {
     server = createServer(
       {
-        run: async (payload) => {
+        enqueue: (payload) => {
           runs.push(payload);
         },
       },
