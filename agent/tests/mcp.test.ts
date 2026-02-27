@@ -1,5 +1,5 @@
 import { describe, test, expect, vi, beforeEach } from "vitest";
-import { McpHandlers } from "../src/mcp-handlers.js";
+import { createHandlers } from "../src/mcp-handlers.js";
 
 const HOST_URL = "http://test-host:3000";
 const CHAT_ID = "chat-42";
@@ -13,7 +13,7 @@ describe("MCP tool handlers", () => {
     test('POSTs text to /send and returns "sent" on success', async () => {
       const mockFetch = vi.fn().mockResolvedValue(new Response(null, { status: 200 }));
       vi.stubGlobal("fetch", mockFetch);
-      const h = new McpHandlers(HOST_URL, CHAT_ID);
+      const h = createHandlers(HOST_URL, CHAT_ID);
 
       const result = await h.send_message({ text: "Hello!" });
 
@@ -27,7 +27,7 @@ describe("MCP tool handlers", () => {
 
     test("returns error status when host responds with failure", async () => {
       vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(null, { status: 503 })));
-      const h = new McpHandlers(HOST_URL, CHAT_ID);
+      const h = createHandlers(HOST_URL, CHAT_ID);
 
       const result = await h.send_message({ text: "Hello!" });
 
@@ -41,7 +41,7 @@ describe("MCP tool handlers", () => {
         .fn()
         .mockResolvedValue(new Response(JSON.stringify({ jobId: 7 }), { status: 200 }));
       vi.stubGlobal("fetch", mockFetch);
-      const h = new McpHandlers(HOST_URL, CHAT_ID);
+      const h = createHandlers(HOST_URL, CHAT_ID);
 
       const result = await h.schedule_job({ cron: "0 9 * * *", task: "Morning summary" });
 
@@ -61,7 +61,7 @@ describe("MCP tool handlers", () => {
           .fn()
           .mockResolvedValue(new Response(JSON.stringify({ error: errorMsg }), { status: 400 })),
       );
-      const h = new McpHandlers(HOST_URL, CHAT_ID);
+      const h = createHandlers(HOST_URL, CHAT_ID);
 
       const result = await h.schedule_job({ cron: "not-a-cron", task: "Whatever" });
 
@@ -73,7 +73,7 @@ describe("MCP tool handlers", () => {
         "fetch",
         vi.fn().mockResolvedValue(new Response(JSON.stringify({}), { status: 400 })),
       );
-      const h = new McpHandlers(HOST_URL, CHAT_ID);
+      const h = createHandlers(HOST_URL, CHAT_ID);
 
       const result = await h.schedule_job({ cron: "not-a-cron", task: "Whatever" });
 

@@ -1,13 +1,13 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { McpHandlers } from "./mcp-handlers.js";
+import { createHandlers } from "./mcp-handlers.js";
 
 const CHAT_ID = process.env.CHAT_ID ?? "";
 const HOST_URL = process.env.HOST_URL ?? "http://host.docker.internal:13821";
 
 const server = new McpServer({ name: "minclaw", version: "1.0.0" });
-const handlers = new McpHandlers(HOST_URL, CHAT_ID);
+const handlers = createHandlers(HOST_URL, CHAT_ID);
 
 server.registerTool(
   "send_message",

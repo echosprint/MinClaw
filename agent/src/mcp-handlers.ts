@@ -17,33 +17,25 @@ function ok(text: string): ToolResult {
   return { content: [{ type: "text", text }] };
 }
 
-export class McpHandlers {
-  constructor(
-    private hostUrl: string,
-    private chatId: string,
-  ) {}
+export function createHandlers(hostUrl: string, chatId: string) {
+  const get = (path: string) => fetch(`${hostUrl}${path}`);
 
-  private get(path: string) {
-    return fetch(`${this.hostUrl}${path}`);
-  }
-
-  private post(path: string, body: unknown) {
-    return fetch(`${this.hostUrl}${path}`, {
+  const post = (path: string, body: unknown) =>
+    fetch(`${hostUrl}${path}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-  }
 
-  send_message = async ({ text }: { text: string }): Promise<ToolResult> => {
-    log.info(`send_message chatId=${this.chatId} text="${text.slice(0, 80)}"`);
-    const res = await this.post("/send", { chatId: this.chatId, text });
+  const send_message = async ({ text }: { text: string }): Promise<ToolResult> => {
+    log.info(`send_message chatId=${chatId} text="${text.slice(0, 80)}"`);
+    const res = await post("/send", { chatId, text });
     const result = res.ok ? "sent" : `error: ${res.status}`;
     log.info(`send_message result=${result}`);
     return ok(result);
-  }
+  };
 
-  schedule_job = async ({
+  const schedule_job = async ({
     cron,
     task,
     one_shot,
@@ -52,15 +44,8 @@ export class McpHandlers {
     task: string;
     one_shot?: boolean;
   }): Promise<ToolResult> => {
-    log.info(
-      `schedule_job chatId=${this.chatId} cron="${cron}" one_shot=${!!one_shot} task="${task}"`,
-    );
-    const res = await this.post("/schedule", {
-      chatId: this.chatId,
-      cron,
-      task,
-      one_shot,
-    });
+    log.info(`schedule_job chatId=${chatId} cron="${cron}" one_shot=${!!one_shot} task="${task}"`);
+    const res = await post("/schedule", { chatId, cron, task, one_shot });
     const data = (await res.json()) as { jobId?: number; error?: string };
     if (!res.ok) {
       const msg = data.error ?? `schedule failed: ${res.status}`;
@@ -69,11 +54,11 @@ export class McpHandlers {
     }
     log.info(`schedule_job result=jobId#${data.jobId}`);
     return ok(`Scheduled job #${data.jobId}`);
-  }
+  };
 
-  list_tasks = async (): Promise<ToolResult> => {
-    log.info(`list_tasks chatId=${this.chatId}`);
-    const res = await this.get(`/jobs?chatId=${encodeURIComponent(this.chatId)}`);
+  const list_tasks = async (): Promise<ToolResult> => {
+    log.info(`list_tasks chatId=${chatId}`);
+    const res = await get(`/jobs?chatId=${encodeURIComponent(chatId)}`);
     const jobs = (await res.json()) as Job[];
     if (!jobs.length) return ok("No scheduled tasks.");
     const lines = jobs.map((j) => {
@@ -83,16 +68,15 @@ export class McpHandlers {
       return `- [#${j.id}] ${task} (${j.cron}, ${type}) — next: ${next}`;
     });
     return ok(`Scheduled tasks:\n${lines.join("\n")}`);
-  }
+  };
 
-  cancel_task = async ({ job_id }: { job_id: number }): Promise<ToolResult> => {
-    log.info(`cancel_task chatId=${this.chatId} job_id=${job_id}`);
-    const res = await this.post("/cancel-job", {
-      chatId: this.chatId,
-      jobId: job_id,
-    });
+  const cancel_task = async ({ job_id }: { job_id: number }): Promise<ToolResult> => {
+    log.info(`cancel_task chatId=${chatId} job_id=${job_id}`);
+    const res = await post("/cancel-job", { chatId, jobId: job_id });
     const data = (await res.json()) as { cancelled: boolean };
     const msg = data.cancelled ? `Job #${job_id} cancelled.` : `Job #${job_id} not found.`;
     return ok(msg);
-  }
+  };
+
+  return { send_message, schedule_job, list_tasks, cancel_task };
 }

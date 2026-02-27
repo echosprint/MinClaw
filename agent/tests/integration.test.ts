@@ -2,7 +2,7 @@
 import { describe, test, expect, vi, beforeAll, afterAll, beforeEach } from "vitest";
 import http from "http";
 import { createServer } from "../src/server.js";
-import { McpHandlers } from "../src/mcp-handlers.js";
+import { createHandlers } from "../src/mcp-handlers.js";
 import { run } from "../src/runner.js";
 
 // Mock the SDK — implementation is set per-test via mockImplementation
@@ -94,13 +94,13 @@ describe("agent integration", () => {
   }
 
   // Helper: simulate agent calling MCP tools, extracted from the query call options
-  function agentCallsTools(fn: (handlers: McpHandlers, chatId: string) => Promise<void>) {
+  function agentCallsTools(fn: (handlers: ReturnType<typeof createHandlers>, chatId: string) => Promise<void>) {
     vi.mocked(query).mockImplementation(async function* (params: Parameters<typeof query>[0]) {
       const env =
         (params.options?.mcpServers as Record<string, { env?: Record<string, string> }>)?.minclaw
           ?.env ?? {};
       // Always point at the test host server; only chatId comes from runner options
-      const handlers = new McpHandlers(HOST_URL, env.CHAT_ID ?? "");
+      const handlers = createHandlers(HOST_URL, env.CHAT_ID ?? "");
       await fn(handlers, env.CHAT_ID ?? "");
     } as typeof query);
   }
