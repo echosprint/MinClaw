@@ -89,7 +89,7 @@ describe("agent integration", () => {
     return fetch(`http://localhost:${AGENT_PORT}/run`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ chatId, message, history: [] }),
+      body: JSON.stringify({ chatId, message, history: [], timezone: "UTC", timestamp: new Date().toISOString() }),
     });
   }
 

@@ -1,27 +1,20 @@
-import fs from "fs";
-import path from "path";
+const HOST_URL = process.env.HOST_URL ?? "http://host.docker.internal:13821";
 
-const LOG_DIR = "/app/log";
-const LOG_FILE = path.join(LOG_DIR, "minclaw.log");
-const canWrite = fs.existsSync(LOG_DIR);
-
-function ts(): string {
-  return new Date().toTimeString().slice(0, 8);
-}
-
-function write(line: string): void {
-  if (canWrite) fs.appendFileSync(LOG_FILE, line + "\n");
+function sendToHost(level: string, msg: string): void {
+  fetch(`${HOST_URL}/log`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ level, msg }),
+  }).catch(() => {}); // fire-and-forget, silent on failure
 }
 
 export const log = {
   info(msg: string): void {
-    const line = `[${ts()}][agent][INFO] ${msg}`;
-    console.log(line);
-    write(line);
+    console.log(`[agent][INFO] ${msg}`);
+    sendToHost("info", msg);
   },
   error(msg: string): void {
-    const line = `[${ts()}][agent][ERROR] ${msg}`;
-    console.error(line);
-    write(line);
+    console.error(`[agent][ERROR] ${msg}`);
+    sendToHost("error", msg);
   },
 };

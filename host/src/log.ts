@@ -25,4 +25,9 @@ export const log = {
     console.error(line);
     write(line);
   },
+  agent(level: string, msg: string): void {
+    const line = `[${ts()}][agent][${level.toUpperCase()}] ${msg}`;
+    console.log(line);
+    write(line);
+  },
 };

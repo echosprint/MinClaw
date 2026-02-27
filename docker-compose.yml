@@ -8,7 +8,6 @@ services:
       - HOST_URL=http://host.docker.internal:13821
       - AGENT_PORT=14827
     volumes:
-      - ./log:/app/log
       - ./data/memory:/workspace/memory
     extra_hosts:
       - "host.docker.internal:host-gateway"

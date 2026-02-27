@@ -50,6 +50,12 @@ export function createServer(deps: ServerDeps, port: number): http.Server {
         return;
       }
 
+      if (route === "POST /log") {
+        log.agent(body.level ?? "info", body.msg ?? "");
+        respond(res, 200);
+        return;
+      }
+
       if (route === "POST /send") {
         log.info(`send       chatId=${body.chatId} text="${body.text.slice(0, 80)}"`);
         await deps.sendToTelegram(body.chatId, body.text);
