@@ -1,13 +1,8 @@
 FROM node:22-slim
 
-# Proxy args for apt-get (pass via --build-arg or docker-compose build args)
-ARG HTTP_PROXY
-ARG HTTPS_PROXY
-ARG http_proxy
-ARG https_proxy
-
 # System dependencies for Chromium (required by agent-browser)
 RUN apt-get update && apt-get install -y \
+    curl \
     git \
     chromium \
     fonts-liberation \
@@ -41,7 +36,7 @@ COPY . .
 RUN npm run build
 
 # Run as non-root
-RUN chown -R node:node /app
+RUN chown -R node:node /app && chmod 777 /home/node
 USER node
 
 EXPOSE 4000
