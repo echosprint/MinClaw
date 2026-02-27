@@ -1,105 +1,62 @@
 ---
 name: weather
-description: "Get current weather and forecasts via wttr.in. Use when: user asks about weather, temperature, or forecasts for any location. No API key needed."
-allowed-tools: Bash(curl:*)
+description: "Get current weather and forecasts by browsing weather websites. Use when: user asks about weather, temperature, or forecasts for any location."
+allowed-tools: Bash(agent-browser:*), WebSearch, WebFetch
 ---
 
 # Weather Skill
 
-Get current weather conditions and forecasts using wttr.in — no API key required.
-
-## When to Use
-
-✅ **USE this skill when:**
-
-- "What's the weather?"
-- "Will it rain today/tomorrow?"
-- "Temperature in [city]"
-- "Weather forecast for the week"
-- Travel planning weather checks
-
-## When NOT to Use
-
-❌ **DON'T use this skill when:**
-
-- Historical weather data → use weather archives/APIs
-- Climate analysis or trends → use specialized data sources
-- Severe weather alerts → check official NWS sources
-- Aviation/marine weather → use specialized services
+Use `WebSearch` to find the right weather page, then `agent-browser` to open it and extract the information.
 
 ## Location
 
-Always include a city, region, or airport code in weather queries.
+If the user did not specify a location, call `send_message` to ask first:
 
-## Commands
+> "Which city would you like the weather for?"
 
-### Current Weather
+## Which Site to Use
 
-```bash
-# One-line summary
-curl "wttr.in/London?format=3"
+Check the timezone from `mcp__minclaw__get_local_time`:
 
-# Detailed current conditions
-curl "wttr.in/London?0"
+- **Asia/Shanghai** → browse **weather.com.cn**
+- **All other timezones** → browse **weather.com**
 
-# Specific city with spaces
-curl "wttr.in/New+York?format=3"
+## Workflow
+
+### Step 1 — Find the weather page URL via WebSearch
+
+For **Asia/Shanghai**:
+
+```text
+WebSearch: "{city}天气 site:weather.com.cn"
 ```
 
-### Forecasts
+For **other timezones**:
 
-```bash
-# 3-day forecast
-curl "wttr.in/London"
-
-# Week forecast
-curl "wttr.in/London?format=v2"
-
-# Specific day (0=today, 1=tomorrow, 2=day after)
-curl "wttr.in/London?1"
+```text
+WebSearch: "{city} weather site:weather.com"
 ```
 
-### Format Options
+Pick the most relevant result URL from the search results.
+
+### Step 2 — Open and read the page
 
 ```bash
-# One-liner with details
-curl "wttr.in/London?format=%l:+%c+%t+%w"
-
-# JSON output
-curl "wttr.in/London?format=j1"
+agent-browser open "<url from search results>"
+agent-browser snapshot
 ```
 
-### Format Codes
+Read the snapshot and extract the weather information.
 
-- `%c` — Weather condition emoji
-- `%t` — Temperature
-- `%f` — "Feels like"
-- `%w` — Wind
-- `%h` — Humidity
-- `%p` — Precipitation
-- `%l` — Location
+## What to Extract
 
-## Quick Responses
+Read the snapshot and extract:
 
-### "What's the weather?"
+- Current temperature and condition
+- Feels like temperature
+- Wind speed and direction
+- Humidity
+- Today's high/low
+- Next few days forecast if available
 
-```bash
-curl -s "wttr.in/London?format=%l:+%c+%t+(feels+like+%f),+%w+wind,+%h+humidity"
-```
-
-### "Will it rain?"
-
-```bash
-curl -s "wttr.in/London?format=%l:+%c+%p"
-```
-
-### "Weekend forecast"
-
-```bash
-curl "wttr.in/London?format=v2"
-```
-
-## Notes
-
-- Works for most global cities and airport codes (e.g. `wttr.in/ORD`)
-- Rate limited — one request per query, don't loop
+Report results via `send_message` in a concise, readable format.
