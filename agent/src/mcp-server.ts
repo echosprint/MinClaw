@@ -81,7 +81,10 @@ ONE-TIME REMINDERS — run \`date\` first to get current time, then calculate:
 
 server.registerTool(
   "list_tasks",
-  { description: "List all active scheduled tasks for this chat." },
+  {
+    description:
+      "List all active scheduled tasks for this chat. Always call this first before cancelling a task.",
+  },
   handlers.list_tasks,
 );
 
@@ -89,7 +92,7 @@ server.registerTool(
   "cancel_task",
   {
     description:
-      "Cancel and deactivate a scheduled task by its ID. Use list_tasks first to find the ID.",
+      "Cancel a scheduled task by its ID. You MUST call list_tasks first, identify the most relevant task, confirm with the user via send_message, and only then call this tool.",
     inputSchema: { job_id: z.number().int().describe("The task ID to cancel (from list_tasks)") },
   },
   handlers.cancel_task,

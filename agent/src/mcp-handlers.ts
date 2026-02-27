@@ -1,6 +1,7 @@
 import { log } from "./log.js";
 
 export interface ToolResult {
+  [key: string]: unknown;
   content: [{ type: "text"; text: string }];
 }
 
