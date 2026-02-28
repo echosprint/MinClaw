@@ -80,11 +80,20 @@ export function createHandlers(hostUrl: string, chatId: string) {
     return ok(msg);
   };
 
+  const get_chat_history = async ({ limit }: { limit?: number }): Promise<ToolResult> => {
+    const res = await get(`/history?chatId=${encodeURIComponent(chatId)}&limit=${limit ?? 20}`);
+    if (!res.ok) return ok(`get_chat_history failed: ${res.status}`);
+    const messages = (await res.json()) as { role: string; content: string }[];
+    if (!messages.length) return ok("No chat history.");
+    const lines = messages.map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`);
+    return ok(lines.join("\n\n"));
+  };
+
   const get_local_time = async (): Promise<ToolResult> => {
     const tz = process.env.TZ!;
     const time = new Date().toLocaleString("en-US", { timeZone: tz });
     return ok(`Current time: ${time} (${tz})`);
   };
 
-  return { send_message, schedule_job, list_tasks, cancel_task, get_local_time };
+  return { send_message, schedule_job, list_tasks, cancel_task, get_local_time, get_chat_history };
 }

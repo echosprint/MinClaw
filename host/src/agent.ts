@@ -9,13 +9,15 @@ export interface RunPayload {
   chatId: string;
   message: string;
   history: Message[];
+  alert?: boolean;
 }
 
 const AGENT_URL = process.env.AGENT_URL ?? "http://localhost:14827";
 
 export async function run(payload: RunPayload): Promise<void> {
   const body = { ...payload, timestamp: new Date().toISOString() };
-  log.info(`agent send chatId=${payload.chatId} msg="${payload.message.slice(0, 80)}"`);
+  const tag = payload.alert ? "[alert]" : "agent send";
+  log.info(`${tag} chatId=${payload.chatId} msg="${payload.message.slice(0, 80)}"`);
   await fetch(`${AGENT_URL}/run`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

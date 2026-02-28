@@ -13,6 +13,7 @@ export interface RunPayload {
   message: string;
   history: Message[];
   timestamp: string;
+  alert?: boolean;
 }
 
 const HOST_URL = process.env.HOST_URL ?? "http://host.docker.internal:13821";
@@ -43,6 +44,7 @@ const ALLOWED_TOOLS = [
   "mcp__minclaw__list_tasks",
   "mcp__minclaw__cancel_task",
   "mcp__minclaw__get_local_time",
+  "mcp__minclaw__get_chat_history",
 ];
 
 const TZ = await fetch(`${HOST_URL}/timezone`)
@@ -115,7 +117,8 @@ async function runQuery(payload: RunPayload): Promise<void> {
   const context = payload.history
     .map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`)
     .join("\n");
-  const prompt = context ? `${context}\n\nUser: ${payload.message}` : payload.message;
+  const prefix = payload.alert ? "[Scheduled alert]" : "User";
+  const prompt = [context, `${prefix}: ${payload.message}`].filter(Boolean).join("\n\n");
 
   log.info(`run start  chatId=${payload.chatId}`);
 

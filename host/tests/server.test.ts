@@ -23,6 +23,9 @@ describe("host server", () => {
           savedJobs.push({ chatId, cron, task });
           return savedJobs.length;
         },
+        getActiveJobs: () => [],
+        cancelJob: () => false,
+        getHistory: () => [],
       },
       PORT,
     );

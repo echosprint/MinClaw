@@ -25,20 +25,21 @@ const server = createServer(
     sendToTelegram: async (chatId, text) => {
       await bot.api.sendMessage(chatId, mdToHtml(text), { parse_mode: "HTML" });
     },
-    saveMessage: db.saveMessage.bind(db),
-    addJob: db.addJob.bind(db),
-    getActiveJobs: db.getActiveJobs.bind(db),
-    cancelJob: db.cancelJob.bind(db),
+    saveMessage: db.saveMessage,
+    addJob: db.addJob,
+    getActiveJobs: db.getActiveJobs,
+    cancelJob: db.cancelJob,
+    getHistory: db.getHistory,
   },
   HOST_PORT,
 );
 
 // 3. Telegram bot
 bot = createBot(BOT_TOKEN, {
-  saveMessage: db.saveMessage.bind(db),
-  getHistory: db.getHistory.bind(db),
+  saveMessage: db.saveMessage,
+  getHistory: db.getHistory,
   runAgent: agentRun,
-  clearHistory: db.clearHistory.bind(db),
+  clearHistory: db.clearHistory,
   restartAgent: agentRestartAgent,
 });
 bot.catch((err) => console.error("[bot] error:", err));
@@ -53,9 +54,9 @@ bot
 
 // 4. Scheduler — fires due jobs every minute
 startScheduler({
-  getDueJobs: db.getDueJobs.bind(db),
-  advanceJob: db.advanceJob.bind(db),
-  deactivateJob: db.deactivateJob.bind(db),
+  getDueJobs: db.getDueJobs,
+  advanceJob: db.advanceJob,
+  deactivateJob: db.deactivateJob,
   runAgent: agentRun,
 });
 

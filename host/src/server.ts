@@ -15,6 +15,7 @@ export interface ServerDeps {
   ) => number;
   getActiveJobs: (chatId: string) => Job[];
   cancelJob: (id: number, chatId: string) => boolean;
+  getHistory: (chatId: string, limit?: number) => { role: string; content: string }[];
 }
 
 function respond(res: http.ServerResponse, status: number, data?: unknown): void {
@@ -86,6 +87,13 @@ export function createServer(deps: ServerDeps, port: number): http.Server {
           `schedule   chatId=${body.chatId} cron="${body.cron}" one_shot=${oneShot} jobId=${jobId}`,
         );
         respond(res, 200, { jobId });
+        return;
+      }
+
+      if (route === "GET /history") {
+        const chatId = url.searchParams.get("chatId") ?? "";
+        const limit = Number(url.searchParams.get("limit") ?? 20);
+        respond(res, 200, deps.getHistory(chatId, limit));
         return;
       }
 

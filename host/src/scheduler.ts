@@ -13,7 +13,7 @@ export interface SchedulerDeps {
 export async function tick(deps: SchedulerDeps): Promise<void> {
   const jobs = deps.getDueJobs();
   for (const job of jobs) {
-    await deps.runAgent({ chatId: job.chat_id, message: job.task, history: [] });
+    await deps.runAgent({ chatId: job.chat_id, message: job.task, history: [], alert: true });
     if (job.one_shot) {
       deps.deactivateJob(job.id);
     } else {
