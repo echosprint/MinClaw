@@ -19,16 +19,22 @@ interface MailOptions {
   references?: string;
 }
 
+function encodeHeader(value: string): string {
+  if (/^[\x00-\x7F]*$/.test(value)) return value;
+  return `=?UTF-8?B?${Buffer.from(value).toString("base64")}?=`;
+}
+
 function makeRfc2822({ to, subject, body, inReplyTo, references }: MailOptions): string {
   const lines = [
     `To: ${to}`,
-    `Subject: ${subject}`,
+    `Subject: ${encodeHeader(subject)}`,
     `MIME-Version: 1.0`,
     `Content-Type: text/plain; charset=UTF-8`,
+    `Content-Transfer-Encoding: base64`,
   ];
   if (inReplyTo) lines.push(`In-Reply-To: ${inReplyTo}`);
   if (references) lines.push(`References: ${references}`);
-  lines.push(``, body);
+  lines.push(``, Buffer.from(body, "utf8").toString("base64"));
   return lines.join("\r\n");
 }
 
