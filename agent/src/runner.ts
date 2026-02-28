@@ -45,7 +45,7 @@ const ALLOWED_TOOLS = [
   "mcp__minclaw__get_local_time",
 ];
 
-const TZ = await fetch(`${HOST_URL}/localtime`)
+const TZ = await fetch(`${HOST_URL}/timezone`)
   .then((r) => r.json() as Promise<{ timezone: string }>)
   .then((d) => d.timezone)
   .catch((err) => {
@@ -120,7 +120,11 @@ async function runQuery(payload: RunPayload): Promise<void> {
   log.info(`run start  chatId=${payload.chatId}`);
 
   const mcpServers = {
-    minclaw: { command: "node", args: [mcpServerPath], env: { CHAT_ID: payload.chatId, HOST_URL, TZ } },
+    minclaw: {
+      command: "node",
+      args: [mcpServerPath],
+      env: { CHAT_ID: payload.chatId, HOST_URL, TZ },
+    },
   };
 
   for await (const msg of query({ prompt, options: { ...options, mcpServers } })) {

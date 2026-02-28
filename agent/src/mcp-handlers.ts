@@ -63,7 +63,7 @@ export function createHandlers(hostUrl: string, chatId: string) {
     const jobs = (await res.json()) as Job[];
     if (!jobs.length) return ok("No scheduled tasks.");
     const lines = jobs.map((j, i) => {
-      const next = new Date(j.next_run).toLocaleString("en-US", { timeZone: process.env.TZ });
+      const next = new Date(j.next_run).toLocaleString("en-US", { timeZone: process.env.TZ! });
       const type = j.one_shot ? "one-time" : "recurring";
       const cp = [...j.task];
       const task = cp.length > 60 ? cp.slice(0, 60).join("") + "…" : j.task;
@@ -81,7 +81,7 @@ export function createHandlers(hostUrl: string, chatId: string) {
   };
 
   const get_local_time = async (): Promise<ToolResult> => {
-    const tz = process.env.TZ ?? "UTC";
+    const tz = process.env.TZ!;
     const time = new Date().toLocaleString("en-US", { timeZone: tz });
     return ok(`Current time: ${time} (${tz})`);
   };

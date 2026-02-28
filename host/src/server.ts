@@ -51,10 +51,8 @@ export function createServer(deps: ServerDeps, port: number): http.Server {
         return;
       }
 
-      if (route === "GET /localtime") {
-        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        const time = new Date().toLocaleString("en-US", { timeZone: tz });
-        respond(res, 200, { time, timezone: tz });
+      if (route === "GET /timezone") {
+        respond(res, 200, { timezone: Intl.DateTimeFormat().resolvedOptions().timeZone });
         return;
       }
 
