@@ -12,6 +12,7 @@
     "stop": "docker compose down; kill $(lsof -ti:13821) 2>/dev/null; true",
     "reboot": "pnpm stop && pnpm build && pnpm start",
     "clear-jobs": "cd host && node --require tsx/cjs scripts/clear-jobs.ts",
+    "google-auth": "cd host && node --require tsx/cjs scripts/google-auth.ts",
     "clear-log": "rm -f log/minclaw.log && touch log/minclaw.log"
   },
   "devDependencies": {

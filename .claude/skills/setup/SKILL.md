@@ -137,7 +137,61 @@ If `CLAUDE_CODE_OAUTH_TOKEN` (and `ANTHROPIC_API_KEY`) are both empty or missing
 - **Subscription:** Tell the user to run `claude setup-token` in another terminal, copy the token, then use `AskUserQuestion` to collect it. Write as `CLAUDE_CODE_OAUTH_TOKEN=<token>` in `.env`.
 - **API key:** Use `AskUserQuestion` to collect the key. Write as `ANTHROPIC_API_KEY=<key>` in `.env`.
 
-### 2d. Optional Proxy
+### 2d. Optional: Google Credentials (Gmail + Calendar)
+
+`AskUserQuestion: Do you want to enable Gmail and Google Calendar integration?`
+
+If yes, walk the user through the following steps:
+
+#### Step 1 — Create OAuth credentials in Google Cloud Console
+
+Tell the user:
+
+> 1. Go to [https://console.cloud.google.com](https://console.cloud.google.com) and create (or select) a project.
+> 2. Enable these two APIs: **Gmail API** and **Google Calendar API**
+>    (APIs & Services → Library → search each → Enable)
+> 3. Go to **APIs & Services → OAuth consent screen**:
+>    - User type: **External**
+>    - Fill in App name, support email, developer email → Save
+>    - Under **Scopes**, add exactly these three:
+>
+>      | API | Scope |
+>      | --- | --- |
+>      | Gmail API | `.../auth/gmail.compose` — Manage drafts and send emails |
+>      | Gmail API | `.../auth/gmail.readonly` — View your email messages and settings |
+>      | Google Calendar API | `.../auth/calendar.events` — View and edit events on all your calendars |
+>
+>    - Under **Test users**, add your own Google account email → Save
+>      _(The app stays in Testing mode — this is fine for personal use. Only accounts listed here can authorize.)_
+> 4. Go to **APIs & Services → Credentials** → **Create Credentials** → **OAuth client ID**:
+>    - Application type: **Desktop app**
+>    - Name: anything (e.g. `MinClaw`)
+>    - Click **Create**, then click **Download JSON** and save the file (e.g. `client_secret_xxx.json`)
+>    - Open the credential for editing:
+>      - **Authorized JavaScript origins** — leave empty (delete any placeholder like `https://www.example.com`)
+>      - **Authorized redirect URIs** — add exactly: `http://127.0.0.1:9004` (no trailing slash, no `localhost`)
+>    - Click **Save** and wait ~30 seconds before running the auth script
+
+#### Step 2 — Run the auth script
+
+```bash
+pnpm google-auth ~/Downloads/client_secret_*.json
+```
+
+The script starts a local server on port 9004, prints an authorization URL, and waits. The user opens the URL in their browser, signs in with the test-user Google account, and grants permissions — the browser redirects back automatically. The script then **writes `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `GOOGLE_REFRESH_TOKEN` directly to `.env`** (adding or updating the values). No manual copy-paste needed.
+
+**Common errors:**
+
+- `redirect_uri_mismatch` — URI in Google Cloud Console doesn't match exactly. Must be `http://127.0.0.1:9004` with no trailing slash and no `localhost`.
+- `access_denied` / "app not verified" — your Google account is not in the Test users list. Add it under **APIs & Services → OAuth consent screen → Test users**.
+- "Google hasn't verified this app" warning — this is expected for a personal app in Testing mode. Click **Continue** (or **Advanced → Go to MinClaw (unsafe)**) to proceed.
+- "MinClaw wants access" consent screen — check **Select all** to grant all three scopes, then click **Continue**.
+
+If Gmail/Calendar credentials are missing from `.env`, those tools will silently fail but the rest of MinClaw works normally.
+
+---
+
+### 2e. Optional Proxy
 
 `AskUserQuestion: Do you use an HTTP proxy? (e.g. Clash, Surge)`
 
@@ -370,3 +424,5 @@ rm -rf data/memory/*
 **SQLite error on startup:** Delete `data/db/minclaw.db` and restart — the schema is auto-created by `db.init()` on next start.
 
 **Proxy issues:** If builds hang, ensure both `HTTPS_PROXY` and `DOCKER_BUILD_PROXY` are set in `.env`. The host process picks up `HTTPS_PROXY` automatically; Docker builds need `--build-arg`.
+
+**Gmail/Calendar tools not working:** Check that `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `GOOGLE_REFRESH_TOKEN` are all set in `.env`. Verify the OAuth consent screen has the correct scopes (`gmail.compose`, `gmail.readonly`, `calendar.events`) and your Google account is listed as a test user. Re-run Phase 2d to regenerate the refresh token if it has been revoked.

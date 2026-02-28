@@ -5,3 +5,4 @@ dist/
 /log/
 /host/data/
 /data/
+client_secret*.json
