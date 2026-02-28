@@ -2,7 +2,7 @@
 
 A minimal personal assistant powered by Claude AI. Message it on Telegram to browse the web, run code, schedule tasks, and more.
 
-Inspired by [OpenClaw](https://github.com/openclaw/openclaw) and [NanoClaw](https://github.com/qwibitai/nanoclaw). Under 1000 lines of code for a complete personal assistant — one Telegram channel, one agent container.
+Inspired by [OpenClaw](https://github.com/openclaw/openclaw) and [NanoClaw](https://github.com/qwibitai/nanoclaw). ~1600 lines of TypeScript for a complete personal assistant — one Telegram channel, one agent container.
 
 ## Why I Built MinClaw
 
@@ -20,7 +20,7 @@ If you want to understand how the loop works, start here.
 
 ## Philosophy
 
-**Small enough to read.** Under 1000 lines of TypeScript, two processes, 12 files. A complete personal assistant you can read in an afternoon and fully understand.
+**Small enough to read.** ~1600 lines of TypeScript, two processes, 14 files. A complete personal assistant you can read in an afternoon and fully understand.
 
 **Easy to audit.** No transitive magic, no hidden middleware. Every request follows a straight line from Telegram message to Claude response. You can trace the full path in minutes.
 
@@ -30,10 +30,14 @@ If you want to understand how the loop works, start here.
 
 ## What It Can Do
 
-- **Chat** — talk to MinClaw from your Telegram; full conversation history per chat
-- **Browse the web** — search and fetch pages; headless Chrome via agent-browser
+- **Chat** — full conversation history per chat, persistent memory across sessions
+- **Browse the web** — search and fetch pages; headless Chrome via agent-browser; click, fill forms, take screenshots
 - **Run code** — Bash, file read/write, grep, glob inside the agent container
 - **Schedule tasks** — set recurring or one-time jobs in plain language; MinClaw converts them to cron expressions
+- **Gmail** — read and summarize emails, draft and send, reply with threading
+- **Google Calendar** — add events in natural language
+- **GitHub** — check PR status and CI, create and comment on issues, view workflow run logs, query the API
+- **Code & repo work** — clone a repo, analyze architecture, make changes, open PRs via `gh`
 - **Persistent memory** — agent workspace survives container restarts at `data/memory/`
 
 ## Quick Start
@@ -60,6 +64,10 @@ Remind me to take a break every 2 hours
 Every weekday at 9 AM, give me a weather summary for Shanghai
 What jobs do I have scheduled?
 Cancel the break reminder
+Show me the open PRs on my repo and check which ones have failing CI
+Summarise my unread emails and draft a reply to the one from Alice
+Add a calendar event: team meeting tomorrow at 2 PM
+Clone https://github.com/owner/repo and explain the architecture
 ```
 
 ### Bot Commands
@@ -130,8 +138,10 @@ Telegram ──► Host (Node.js / macOS or Linux)
               Agent (Docker container / port 14827)
                ├─ Claude SDK       — @query tool-use loop
                ├─ MCP server       — send_message, schedule_job, list_tasks, cancel_task
+               ├─ Gmail MCP        — draft/send email, summarize inbox, add calendar events
+               ├─ Skills           — github (gh CLI), weather, agent-browser
                └─ Tools            — Bash, Read/Write/Edit, Grep, Glob,
-                                     WebSearch, WebFetch, agent-browser
+                                     WebSearch, WebFetch, agent-browser (Chromium)
 ```
 
 The host owns Telegram and the database. The agent owns Claude. They talk over HTTP: the host POSTs tasks to the agent; the agent POSTs replies and job commands back to the host.
@@ -152,11 +162,13 @@ MinClaw/
 │   └── markdown.ts     — Markdown → Telegram HTML
 │
 ├── agent/src/
-│   ├── index.ts        — entry point
-│   ├── runner.ts       — Claude @query tool-use loop
-│   ├── server.ts       — HTTP server (/health, /run)
-│   ├── mcp-server.ts   — MCP tool definitions
-│   └── mcp-handlers.ts — MCP tool implementations
+│   ├── index.ts           — entry point
+│   ├── runner.ts          — Claude @query tool-use loop
+│   ├── server.ts          — HTTP server (/health, /run)
+│   ├── mcp-server.ts      — MCP tool definitions (Telegram + scheduler)
+│   ├── mcp-handlers.ts    — MCP tool implementations
+│   ├── gmail-mcp-server.ts — Gmail + Calendar MCP tools
+│   └── gmail-handlers.ts  — Gmail + Calendar implementations
 │
 ├── agent/Dockerfile        — production image
 ├── agent/Dockerfile.base   — base image (Node + Chromium + Claude Code)
