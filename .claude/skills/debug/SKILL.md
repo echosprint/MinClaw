@@ -401,6 +401,43 @@ docker builder prune -f
 cd agent && bash build.sh
 ```
 
+## Docker Build Network Failures (apt-get)
+
+`apt-get update` and `apt-get install` during `docker build` can fail with network errors — connection timeouts, `Could not resolve`, `Failed to fetch`, `Hash Sum mismatch`. This is especially common in China where Debian mirrors and package CDNs are often unreachable or slow. This is almost always a transient network issue, not a code problem. **Just retry.**
+
+**Retry the build directly:**
+
+```bash
+# Retry base image build
+cd agent && bash build.sh --base
+
+# Or use pnpm build:fresh (base + app)
+pnpm build:fresh
+```
+
+If it keeps failing after 2–3 tries:
+
+**Use a proxy for the build.** Set `DOCKER_BUILD_PROXY` in `.env` and pass it as a build arg:
+
+```bash
+source .env
+cd agent && docker build \
+  --build-arg https_proxy="${DOCKER_BUILD_PROXY}" \
+  --build-arg http_proxy="${DOCKER_BUILD_PROXY}" \
+  -f Dockerfile.base -t minclaw-agent-base:latest .
+```
+
+**Clear stale layer cache and retry:**
+
+```bash
+docker builder prune -f
+cd agent && bash build.sh --base
+```
+
+**Check which step failed** — if it's a specific `apt-get install` package, the error message names the package. A single package failing is usually a mirror glitch; retry resolves it.
+
+---
+
 ## Checking the Base Image
 
 The base image (`minclaw-agent-base`) is slow to build and rarely needs rebuilding. Rebuild only when:
