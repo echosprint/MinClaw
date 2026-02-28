@@ -39,7 +39,7 @@ If you want to understand how the loop works, start here.
 ## Quick Start
 
 ```bash
-git clone <this repo>
+git clone https://github.com/echosprint/MinClaw.git
 cd MinClaw
 claude
 ```
