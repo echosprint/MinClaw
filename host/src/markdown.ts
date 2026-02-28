@@ -13,7 +13,10 @@ export function mdToHtml(text: string): string {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 
-  // 2. Extract code blocks and inline code into placeholders so subsequent
+  // 2. Horizontal rules --- → Unicode divider (Telegram has no <hr>)
+  result = result.replace(/^[ \t]*---+[ \t]*$/gm, "──────────────────────");
+
+  // 3. Extract code blocks and inline code into placeholders so subsequent
   //    italic/bold regexes cannot match inside them or across their boundaries.
   const slots: string[] = [];
   const stash = (html: string) => {
@@ -32,7 +35,7 @@ export function mdToHtml(text: string): string {
     stash(`<code>${code}</code>`)
   );
 
-  // 3. Apply remaining conversions (safe — no code content in result)
+  // 4. Apply remaining conversions (safe — no code content in result)
   result = result
     // headings # ## ### → bold
     .replace(/^#{1,6}\s+(.+)$/gm, "<b>$1</b>")
@@ -46,7 +49,7 @@ export function mdToHtml(text: string): string {
     // links [label](url)
     .replace(/\[(.+?)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2">$1</a>');
 
-  // 4. Restore placeholders
+  // 5. Restore placeholders
   result = result.replace(/\x00(\d+)\x00/g, (_, i) => slots[Number(i)]);
 
   return result;
