@@ -20,7 +20,7 @@ db.init();
 
 // 2. HTTP server — receives callbacks from agent container
 let bot: Bot;
-const server = createServer(
+createServer(
   {
     sendToTelegram: async (chatId, text) => {
       await bot.api.sendMessage(chatId, mdToHtml(text), { parse_mode: "HTML" });

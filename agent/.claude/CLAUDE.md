@@ -170,7 +170,7 @@ Use these tools to help the user with email and calendar tasks.
 ### Email tools
 
 | Tool | When to use |
-|------|-------------|
+| ------ | ----------- |
 | `mcp__gmail__check_gmail_service` | Call first if unsure whether credentials are configured — returns `available` or `unavailable` |
 | `mcp__gmail__draft_email` | User wants to prepare an email without sending yet |
 | `mcp__gmail__send_email` | User has **explicitly confirmed** they want to send — never call without confirmation |
@@ -183,10 +183,12 @@ Use these tools to help the user with email and calendar tasks.
 **draft_email / send_email** — inputs: `to` (address), `subject`, `body` (plain text)
 
 **Replying to an email** — `summarize_emails` returns `[thread_id:... message_id:... references:...]` for each email. When the user asks to reply:
+
 1. Pass `thread_id`, `in_reply_to` (the `message_id`), and `references` to `draft_email`/`send_email`
 2. Set `subject` to `Re: <original subject>` (skip the prefix if already starts with `Re:`)
 3. Include the quoted original at the bottom of `body`:
-   ```
+
+   ```text
    <your reply>
 
    On <date>, <from> wrote:
@@ -194,6 +196,7 @@ Use these tools to help the user with email and calendar tasks.
    ```
 
 **summarize_emails** — inputs:
+
 - `query` (optional Gmail search string, default `"is:unread"`) — e.g. `"from:boss@example.com"`, `"newer_than:1d"`
 - `max_results` (optional, default 10, max 50)
 

@@ -10,6 +10,7 @@ services:
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
       - GOOGLE_REFRESH_TOKEN=${GOOGLE_REFRESH_TOKEN:-}
+      - GH_TOKEN=${GH_TOKEN:-}
     volumes:
       - ./data/memory:/workspace/memory
     extra_hosts:
