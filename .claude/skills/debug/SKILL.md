@@ -417,21 +417,45 @@ pnpm build:fresh
 
 If it keeps failing after 2–3 tries:
 
-**Use a proxy for the build.** Set `DOCKER_BUILD_PROXY` in `.env` and pass it as a build arg:
+**Switch to a Chinese Debian mirror.** `build.sh` reads `.env` automatically — just set `DEBIAN_MIRROR` and retry:
 
 ```bash
-source .env
-cd agent && docker build \
-  --build-arg https_proxy="${DOCKER_BUILD_PROXY}" \
-  --build-arg http_proxy="${DOCKER_BUILD_PROXY}" \
-  -f Dockerfile.base -t minclaw-agent-base:latest .
+# .env
+DEBIAN_MIRROR=mirrors.tuna.tsinghua.edu.cn
+```
+
+Then rebuild:
+
+```bash
+pnpm build:fresh
+```
+
+Other reliable mirrors in China:
+
+| Mirror | Host |
+| ------ | ---- |
+| Tsinghua (TUNA) | `mirrors.tuna.tsinghua.edu.cn` |
+| Alibaba Cloud | `mirrors.aliyun.com` |
+| USTC | `mirrors.ustc.edu.cn` |
+
+**Use a proxy for the build.** Set `DOCKER_BUILD_PROXY` in `.env` — `build.sh` picks it up automatically:
+
+```bash
+# .env
+DOCKER_BUILD_PROXY=http://host.docker.internal:7897
+```
+
+Then rebuild:
+
+```bash
+pnpm build:fresh
 ```
 
 **Clear stale layer cache and retry:**
 
 ```bash
 docker builder prune -f
-cd agent && bash build.sh --base
+pnpm build:fresh
 ```
 
 **Check which step failed** — if it's a specific `apt-get install` package, the error message names the package. A single package failing is usually a mirror glitch; retry resolves it.

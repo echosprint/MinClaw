@@ -1,5 +1,13 @@
 FROM node:22-slim
 
+# Optional: swap Debian mirror for faster downloads (e.g. in China)
+# Pass --build-arg DEBIAN_MIRROR=mirrors.tuna.tsinghua.edu.cn
+ARG DEBIAN_MIRROR=deb.debian.org
+RUN if [ "$DEBIAN_MIRROR" != "deb.debian.org" ]; then \
+      sed -i "s/deb.debian.org/${DEBIAN_MIRROR}/g" /etc/apt/sources.list.d/debian.sources 2>/dev/null || \
+      sed -i "s/deb.debian.org/${DEBIAN_MIRROR}/g" /etc/apt/sources.list; \
+    fi
+
 # System dependencies for Chromium (required by agent-browser)
 RUN apt-get update && apt-get install -y \
     curl \
