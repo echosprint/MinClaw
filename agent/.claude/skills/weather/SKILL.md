@@ -1,62 +1,110 @@
 ---
 name: weather
-description: "Get current weather and forecasts by browsing weather websites. Use when: user asks about weather, temperature, or forecasts for any location."
-allowed-tools: Bash(agent-browser:*), WebSearch, WebFetch
+description: "Get current weather and forecasts via wttr.in. Use when: user asks about weather, temperature, or forecasts for any location. No API key needed."
+allowed-tools: WebFetch, WebSearch
 ---
 
 # Weather Skill
 
-Use `WebSearch` to find the right weather page, then `agent-browser` to open it and extract the information.
+Get current weather and forecasts using `wttr.in` via `WebFetch` — no browser, no API key.
+
+## When to Use
+
+✅ **USE this skill when:**
+
+- "What's the weather?"
+- "Will it rain today/tomorrow?"
+- "Temperature in [city]"
+- "Weather forecast for the week"
+- Travel planning weather checks
+
+## When NOT to Use
+
+❌ **DON'T use this skill when:**
+
+- Historical weather data → use weather archives
+- Severe weather alerts → check official sources
 
 ## Location
 
-If the user did not specify a location, call `send_message` to ask first:
+If the user did not specify a location, call `send_message` to ask:
 
 > "Which city would you like the weather for?"
 
-## Which Site to Use
+City names in English or Chinese both work (`Beijing`, `北京`, `New York`, `London`).
 
-Check the timezone from `mcp__minclaw__get_local_time`:
+## Commands
 
-- **Asia/Shanghai** → browse **weather.com.cn**
-- **All other timezones** → browse **weather.com**
+Use `WebFetch` with format strings — faster than fetching JSON.
 
-## Workflow
-
-### Step 1 — Find the weather page URL via WebSearch
-
-For **Asia/Shanghai**:
+### Current conditions (one-liner)
 
 ```text
-WebSearch: "{city}天气 site:weather.com.cn"
+WebFetch: https://wttr.in/{city}?format=%l:+%c+%t+(feels+%f),+wind+%w,+humidity+%h
+Prompt: return this text as-is
 ```
 
-For **other timezones**:
+### Will it rain?
 
 ```text
-WebSearch: "{city} weather site:weather.com"
+WebFetch: https://wttr.in/{city}?format=%l:+%c+%p+precipitation
+Prompt: return this text as-is
 ```
 
-Pick the most relevant result URL from the search results.
+### 3-day forecast (text)
 
-### Step 2 — Open and read the page
-
-```bash
-agent-browser open "<url from search results>"
-agent-browser snapshot
+```text
+WebFetch: https://wttr.in/{city}?0
+Prompt: extract and summarize the 3-day forecast
 ```
 
-Read the snapshot and extract the weather information.
+### Full JSON (when detail is needed)
 
-## What to Extract
+```text
+WebFetch: https://wttr.in/{city}?format=j1
+Prompt: extract current temp, feels-like, humidity, wind, condition, and 3-day high/low
+```
 
-Read the snapshot and extract:
+## Format Codes
 
-- Current temperature and condition
-- Feels like temperature
-- Wind speed and direction
-- Humidity
-- Today's high/low
-- Next few days forecast if available
+| Code | Meaning |
+| ---- | ------- |
+| `%c` | Weather condition emoji |
+| `%t` | Temperature |
+| `%f` | Feels like |
+| `%w` | Wind speed and direction |
+| `%h` | Humidity |
+| `%p` | Precipitation |
+| `%l` | Location name |
 
-Report results via `send_message` in a concise, readable format.
+## Quick Patterns
+
+**Current weather:**
+
+```text
+WebFetch: https://wttr.in/{city}?format=3
+```
+
+Returns: `City: ⛅ +12°C`
+
+**Multi-day forecast:**
+
+```text
+WebFetch: https://wttr.in/{city}?format=v2
+```
+
+## Fallback — if wttr.in fails
+
+If `wttr.in` is unreachable or returns an error, fall back to `WebSearch`:
+
+```text
+WebSearch: "{city} weather"
+```
+
+Pick the most informative result and extract weather details from the snippet or fetch the result URL with `WebFetch`.
+
+## Notes
+
+- Try wttr.in first — it is significantly faster than searching
+- Supports airport codes: `wttr.in/PVG`, `wttr.in/LAX`
+- Don't make redundant requests — one fetch is enough for most queries
