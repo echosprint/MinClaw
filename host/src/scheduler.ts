@@ -24,5 +24,5 @@ export async function tick(deps: SchedulerDeps): Promise<void> {
 }
 
 export function start(deps: SchedulerDeps): NodeJS.Timeout {
-  return setInterval(() => tick(deps), 60_000);
+  return setInterval(() => tick(deps), 10_000);
 }
