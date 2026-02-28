@@ -8,6 +8,7 @@
     "dev:host": "pnpm --filter minclaw-host dev",
     "dev:agent": "pnpm --filter minclaw-agent dev",
     "build": "agent/build.sh",
+    "build:fresh": "agent/build.sh --base && agent/build.sh",
     "start": "docker compose up -d && pnpm dev:host",
     "stop": "docker compose down; kill $(lsof -ti:13821) 2>/dev/null; true",
     "reboot": "pnpm stop && pnpm build && pnpm start",
