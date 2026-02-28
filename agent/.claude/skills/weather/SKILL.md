@@ -6,7 +6,7 @@ allowed-tools: WebFetch, WebSearch
 
 # Weather Skill
 
-Get current weather and forecasts using `wttr.in` via `WebFetch` — no browser, no API key.
+Get current weather and forecasts using `wttr.in` via `WebFetch` — no browser, no API key. **Weather should be a quick answer: one fetch, one message, done in under 3 seconds.**
 
 ## When to Use
 
@@ -95,13 +95,21 @@ WebFetch: https://wttr.in/{city}?format=v2
 
 ## Fallback — if wttr.in fails
 
-If `wttr.in` is unreachable or returns an error, fall back to `WebSearch`:
+Check the timezone via `mcp__minclaw__get_local_time`, then choose the fallback site:
+
+**Asia/Shanghai** — search on `weather.com.cn`:
+
+```text
+WebSearch: "{city}天气 site:weather.com.cn"
+```
+
+**All other timezones** — general search:
 
 ```text
 WebSearch: "{city} weather"
 ```
 
-Pick the most informative result and extract weather details from the snippet or fetch the result URL with `WebFetch`.
+Fetch the most relevant result URL with `WebFetch` and extract current conditions.
 
 ## Notes
 
