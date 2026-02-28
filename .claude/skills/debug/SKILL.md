@@ -86,10 +86,7 @@ lsof -i :13821 | grep -q LISTEN && echo "OK" || echo "NOT RUNNING"
 echo -e "\n7. Agent container port bound on :14827?"
 lsof -i :14827 | grep -q LISTEN && echo "OK" || echo "UNREACHABLE"
 
-echo -e "\n8. Log directory mounted?"
-[ -d log ] && echo "OK ($(ls log/ 2>/dev/null | wc -l | tr -d ' ') files)" || echo "MISSING — run: mkdir -p log"
-
-echo -e "\n9. Recent agent activity?"
+echo -e "\n8. Recent agent activity?"
 tail -5 log/minclaw.log 2>/dev/null || echo "(no agent log yet)"
 ```
 
@@ -249,7 +246,6 @@ docker inspect $(docker ps -qf name=minclaw) \
 Expected lines:
 
 ```text
-.../log → /app/log
 .../data/memory → /workspace/memory
 ```
 
@@ -261,7 +257,43 @@ ls -la data/memory/
 
 ---
 
-### 6. Scheduler jobs not firing
+### 6. Bot can't reach Telegram (GFW / China network)
+
+Telegram is blocked in China. Even if a system-level VPN is active, **Node.js does not automatically inherit the proxy** — you must configure it explicitly.
+
+**Symptom:** The host starts, the bot token is valid, but messages are never received and no polling activity appears in the log. Or the host crashes with a connection timeout on startup.
+
+**Fix:** Set `HTTPS_PROXY` in your `.env`:
+
+```bash
+# .env
+HTTPS_PROXY=http://127.0.0.1:7897   # replace with your local proxy port
+```
+
+The host's Grammy bot reads `HTTPS_PROXY` at startup and routes all Telegram API calls through it. The agent container also has `HTTPS_PROXY` wired in `docker-compose.yml` if needed.
+
+**Verify your proxy is working:**
+
+```bash
+source .env
+curl -x "${HTTPS_PROXY}" -s -o /dev/null -w "HTTP %{http_code}\n" --max-time 5 https://api.telegram.org
+# Any HTTP response (200, 302, 403…) means the proxy is reachable
+# A timeout or "Failed to connect" means the proxy is not working
+```
+
+**Common proxy ports by tool:**
+
+| Tool  | Default port |
+|-------|--------------|
+| Clash | `7890`       |
+| V2Ray | `10809`      |
+| Surge | `6152`       |
+
+> **Note:** The proxy address must use `host.docker.internal` for the **container** to reach a proxy running on the host. The `.env` value uses `127.0.0.1` (for the host process). `docker-compose.yml` substitutes `${DOCKER_BUILD_PROXY}` (e.g. `http://host.docker.internal:7897`) for the build step and `HTTPS_PROXY` for the container runtime if configured.
+
+---
+
+### 7. Scheduler jobs not firing
 
 Jobs are stored in `data/db/minclaw.db` and run by the host scheduler.
 
