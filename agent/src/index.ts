@@ -1,5 +1,6 @@
 import { createServer } from "./server.js";
-import { enqueue, startAgent, getTZ } from "./runner.js";
+import { enqueue, startAgent } from "./runner.js";
+import { getTZ } from "./tz.js";
 import { log } from "./log.js";
 
 const PORT = Number(process.env.AGENT_PORT ?? 14827);

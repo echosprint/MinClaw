@@ -1,7 +1,9 @@
 import { query, type SettingSource } from "@anthropic-ai/claude-agent-sdk";
 import path from "path";
-import { fileURLToPath } from "url";
 import { log } from "./log.js";
+import { globalStream } from "./stream.js";
+import { getTZ } from "./tz.js";
+import { HOST_URL, mcpServerPath, clauDir } from "./config.js";
 
 export interface Message {
   role: "user" | "assistant";
@@ -15,11 +17,6 @@ export interface RunPayload {
   timestamp: string;
   alert?: boolean;
 }
-
-const HOST_URL = process.env.HOST_URL ?? "http://host.docker.internal:13821";
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const mcpServerPath = path.resolve(__dirname, "..", "dist", "mcp-server.js");
-const clauDir = path.join(__dirname, "..", ".claude");
 
 const ALLOWED_TOOLS = [
   // Core tools
@@ -47,7 +44,6 @@ const ALLOWED_TOOLS = [
   "mcp__minclaw__get_chat_history",
 ];
 
-
 const options = {
   cwd: "/workspace",
   plugins: [
@@ -59,53 +55,6 @@ const options = {
   allowDangerouslySkipPermissions: true,
   settingSources: ["project", "user"] as SettingSource[],
 };
-
-class MessageStream {
-  private queue: RunPayload[] = [];
-  private waiting: (() => void) | null = null;
-  private done = false;
-
-  push(payload: RunPayload): void {
-    this.queue.push(payload);
-    this.waiting?.();
-  }
-
-  end(): void {
-    this.done = true;
-    this.waiting?.();
-  }
-
-  async *[Symbol.asyncIterator](): AsyncGenerator<RunPayload> {
-    while (true) {
-      while (this.queue.length > 0) yield this.queue.shift()!;
-      if (this.done) return;
-      await new Promise<void>((r) => {
-        this.waiting = r;
-      });
-      this.waiting = null;
-    }
-  }
-}
-
-const globalStream = new MessageStream();
-
-function createTZFetcher() {
-  let TZ: string | undefined;
-  return async (): Promise<string> => {
-    if (!TZ) {
-      TZ = await fetch(`${HOST_URL}/timezone`)
-        .then((r) => r.json() as Promise<{ timezone: string }>)
-        .then((d) => d.timezone)
-        .catch((err) => {
-          log.error(`timezone fetch failed: ${err}`);
-          return "UTC";
-        });
-    }
-    return TZ;
-  };
-}
-
-export const getTZ = createTZFetcher();
 
 export function startAgent(): void {
   void drainMessages();

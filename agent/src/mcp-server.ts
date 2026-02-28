@@ -112,7 +112,13 @@ server.registerTool(
     description:
       "Retrieve recent chat history for this conversation. Call this at the start of a fresh session to understand prior context before responding. If the user references something you have no knowledge of, call again with a larger limit to look further back.",
     inputSchema: {
-      limit: z.number().int().min(1).max(10000).optional().describe("Number of messages to retrieve (default 20)"),
+      limit: z
+        .number()
+        .int()
+        .min(1)
+        .max(10000)
+        .optional()
+        .describe("Number of messages to retrieve (default 20)"),
     },
   },
   handlers.get_chat_history,
