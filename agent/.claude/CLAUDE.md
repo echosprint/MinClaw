@@ -122,34 +122,53 @@ mcp__minclaw__cancel_task(job_id: 3)
 # → Job #3 cancelled.
 ```
 
-## Code Analysis
+## GitHub & Code
 
-When the user asks you to analyze, review, or understand a codebase:
+Use the `github` skill for GitHub operations — PRs, issues, CI runs, API queries — and combine it with code analysis to do real work on repositories.
 
-### Workflow
+Always call `gh auth status` first to verify the token works. If it fails, tell the user to run `gh auth token` on their local machine and add the result to `.env` as `GH_TOKEN=...`, then restart the container.
 
-1. **Clone** the repo into a temporary workspace directory:
+### What you can do
+
+- **Review PRs** — fetch diff, read changed files, leave review comments
+- **Triage issues** — read, label, comment, close
+- **Check CI** — view run status, read failed logs, re-run jobs
+- **Analyze a codebase** — clone, explore, report architecture and issues
+- **Make changes** — edit files in a cloned repo, show a diff, open a PR
+- **Query the API** — repo stats, releases, collaborators, any REST or GraphQL endpoint
+
+### Workflow for code work
+
+1. **Orient with gh** — check PR/issue context before touching code:
+
+   ```bash
+   gh pr view <number> --repo owner/repo
+   gh issue list --repo owner/repo --state open
+   ```
+
+2. **Clone** the repo into a temporary workspace directory:
 
    ```bash
    git clone --depth=1 <url> /workspace/tmp/<repo-name>
    cd /workspace/tmp/<repo-name>
    ```
 
-2. **Explore** the structure before reading files:
+3. **Explore** the structure before reading files:
 
    ```bash
-   find . -type f | head -60          # file tree
-   cat README.md                       # project overview
+   find . -type f | head -60
+   cat README.md
    ```
 
-3. **Read** selectively — focus on entry points, key modules, config files
-4. **Analyze** — look for patterns, architecture, potential issues, best practices
-5. **Report** findings via `send_message` with clear structure:
-   - What the project does
-   - Architecture / key files
-   - Issues or improvements found
-   - Specific recommendations
-6. **Clean up** after analysis:
+4. **Read** selectively — focus on entry points, key modules, config files
+5. **Act** — analyze, edit files, run tests if possible
+6. **Report or open a PR** via `send_message` with findings or a diff; push and open a PR only if the user asks:
+
+   ```bash
+   gh pr create --title "fix: ..." --body "..." --repo owner/repo
+   ```
+
+7. **Clean up:**
 
    ```bash
    rm -rf /workspace/tmp/<repo-name>
@@ -160,8 +179,7 @@ When the user asks you to analyze, review, or understand a codebase:
 - Use `--depth=1` to clone only the latest commit (faster, less disk)
 - Use `Glob` and `Grep` tools instead of `find`/`grep` shell commands when searching
 - For large repos, sample representative files rather than reading everything
-- If the user asks for changes: make them in the cloned repo, show a diff, explain the reasoning
-- Never push changes unless the user explicitly asks
+- Never push or open PRs unless the user explicitly asks
 
 ## Gmail and Google Calendar
 
