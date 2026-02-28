@@ -55,6 +55,8 @@ const options = {
   plugins: [
     { type: "local" as const, path: path.join(clauDir, "skills", "agent-browser") },
     { type: "local" as const, path: path.join(clauDir, "skills", "weather") },
+    { type: "local" as const, path: path.join(clauDir, "skills", "github") },
+    { type: "local" as const, path: path.join(clauDir, "skills", "github") },
   ],
   allowedTools: ALLOWED_TOOLS,
   permissionMode: "bypassPermissions" as const,

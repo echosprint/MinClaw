@@ -191,7 +191,49 @@ If Gmail/Calendar credentials are missing from `.env`, those tools will silently
 
 ---
 
-### 2e. Optional Proxy
+### 2e. Optional: GitHub Token (gh CLI)
+
+`AskUserQuestion: Do you want to enable GitHub integration (check PRs, issues, CI runs)?`
+
+If yes, the agent needs a `GH_TOKEN` in `.env`. There are two ways to get one:
+
+**Option A — use `gh` if already installed and authenticated on the local machine (easiest):**
+
+```bash
+gh auth token
+```
+
+Copy the printed token.
+
+**Option B — generate a Personal Access Token on GitHub.com:**
+
+Tell the user:
+
+> 1. Go to **GitHub → Settings → Developer settings → Personal access tokens**
+> 2. Choose **Fine-grained tokens** (recommended) or **Tokens (classic)**
+> 3. For classic: enable the `repo` scope (and `read:org` if you need org data)
+> 4. Click **Generate token** and copy the result
+
+Add to `.env`:
+
+```text
+GH_TOKEN=<token>
+```
+
+After adding the token, verify it works inside the container:
+
+```bash
+docker compose restart agent
+docker exec $(docker ps -qf name=minclaw) gh auth status
+```
+
+Expected: `✓ Logged in to github.com account <username> (GH_TOKEN)`.
+
+If not set, GitHub tools silently fail but the rest of MinClaw works normally.
+
+---
+
+### 2f. Optional Proxy
 
 `AskUserQuestion: Do you use an HTTP proxy? (e.g. Clash, Surge)`
 
