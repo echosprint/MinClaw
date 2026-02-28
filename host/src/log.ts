@@ -8,10 +8,10 @@ const canWrite = fs.existsSync(LOG_DIR);
 
 const C = {
   reset: "\x1b[0m",
-  gray: "\x1b[90m",       // dim timestamp
-  bot: "\x1b[1;35m",      // bold magenta — host bot
-  agt: "\x1b[1;34m",      // bold blue    — agent
-  error: "\x1b[1;31m",    // bold red     — errors
+  gray: "\x1b[90m", // dim timestamp
+  bot: "\x1b[1;35m", // bold magenta — host bot
+  agt: "\x1b[1;34m", // bold blue    — agent
+  error: "\x1b[1;31m", // bold red     — errors
 };
 
 function ts(): string {
@@ -30,7 +30,9 @@ export const log = {
   },
   error(msg: string): void {
     const line = `[${ts()}][bot][ERROR] ${msg}`;
-    console.error(`${C.gray}[${ts()}]${C.reset} ${C.bot}[bot]${C.reset} ${C.error}[ERROR]${C.reset} ${msg}`);
+    console.error(
+      `${C.gray}[${ts()}]${C.reset} ${C.bot}[bot]${C.reset} ${C.error}[ERROR]${C.reset} ${msg}`,
+    );
     write(line);
   },
   agent(level: string, msg: string): void {

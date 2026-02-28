@@ -5,6 +5,16 @@ vi.mock("@anthropic-ai/claude-agent-sdk", () => ({
   query: vi.fn(() => (async function* () {})()),
 }));
 
+vi.stubGlobal(
+  "fetch",
+  vi
+    .fn()
+    .mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ timezone: "UTC", time: "1/1/2026" }),
+    }),
+);
+
 import { query } from "@anthropic-ai/claude-agent-sdk";
 import { enqueue } from "../src/runner.js";
 

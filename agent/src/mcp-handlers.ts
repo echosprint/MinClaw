@@ -17,7 +17,7 @@ function ok(text: string): ToolResult {
   return { content: [{ type: "text", text }] };
 }
 
-export function createHandlers(hostUrl: string, chatId: string, timezone?: string) {
+export function createHandlers(hostUrl: string, chatId: string) {
   const get = (path: string) => fetch(`${hostUrl}${path}`);
 
   const post = (path: string, body: unknown) =>
@@ -63,7 +63,7 @@ export function createHandlers(hostUrl: string, chatId: string, timezone?: strin
     const jobs = (await res.json()) as Job[];
     if (!jobs.length) return ok("No scheduled tasks.");
     const lines = jobs.map((j, i) => {
-      const next = new Date(j.next_run).toLocaleString("en-US", { timeZone: timezone });
+      const next = new Date(j.next_run).toLocaleString("en-US", { timeZone: process.env.TZ });
       const type = j.one_shot ? "one-time" : "recurring";
       const cp = [...j.task];
       const task = cp.length > 60 ? cp.slice(0, 60).join("") + "…" : j.task;
@@ -81,10 +81,9 @@ export function createHandlers(hostUrl: string, chatId: string, timezone?: strin
   };
 
   const get_local_time = async (): Promise<ToolResult> => {
-    const tz = timezone ?? "UTC";
-    const now = new Date();
-    const localTime = now.toLocaleString("en-US", { timeZone: tz });
-    return ok(`Current time: ${localTime} (${tz})`);
+    const tz = process.env.TZ ?? "UTC";
+    const time = new Date().toLocaleString("en-US", { timeZone: tz });
+    return ok(`Current time: ${time} (${tz})`);
   };
 
   return { send_message, schedule_job, list_tasks, cancel_task, get_local_time };

@@ -16,6 +16,54 @@ export interface RunPayload {
 }
 
 const HOST_URL = process.env.HOST_URL ?? "http://host.docker.internal:13821";
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const mcpServerPath = path.resolve(__dirname, "..", "dist", "mcp-server.js");
+const clauDir = path.join(__dirname, "..", ".claude");
+
+const ALLOWED_TOOLS = [
+  // Core tools
+  "Bash",
+  "Read",
+  "Write",
+  "Edit",
+  "Glob",
+  "Grep",
+  "WebSearch",
+  "WebFetch",
+  "Task",
+  "TaskOutput",
+  "TaskStop",
+  "TodoWrite",
+  "ToolSearch",
+  "Skill",
+  "NotebookEdit",
+  // MinClaw MCP tools
+  "mcp__minclaw__send_message",
+  "mcp__minclaw__schedule_job",
+  "mcp__minclaw__list_tasks",
+  "mcp__minclaw__cancel_task",
+  "mcp__minclaw__get_local_time",
+];
+
+const TZ = await fetch(`${HOST_URL}/localtime`)
+  .then((r) => r.json() as Promise<{ timezone: string }>)
+  .then((d) => d.timezone)
+  .catch((err) => {
+    log.error(`timezone fetch failed: ${err}`);
+    return "UTC";
+  });
+
+const options = {
+  cwd: "/workspace",
+  plugins: [
+    { type: "local" as const, path: path.join(clauDir, "skills", "agent-browser") },
+    { type: "local" as const, path: path.join(clauDir, "skills", "weather") },
+  ],
+  allowedTools: ALLOWED_TOOLS,
+  permissionMode: "bypassPermissions" as const,
+  allowDangerouslySkipPermissions: true,
+  settingSources: ["project", "user"] as SettingSource[],
+};
 
 class MessageStream {
   private queue: RunPayload[] = [];
@@ -63,73 +111,19 @@ export function enqueue(payload: RunPayload): void {
   globalStream.push(payload);
 }
 
-const ALLOWED_TOOLS = [
-  // Core tools
-  "Bash",
-  "Read",
-  "Write",
-  "Edit",
-  "Glob",
-  "Grep",
-  "WebSearch",
-  "WebFetch",
-  "Task",
-  "TaskOutput",
-  "TaskStop",
-  "TodoWrite",
-  "ToolSearch",
-  "Skill",
-  "NotebookEdit",
-  // MinClaw MCP tools
-  "mcp__minclaw__send_message",
-  "mcp__minclaw__schedule_job",
-  "mcp__minclaw__list_tasks",
-  "mcp__minclaw__cancel_task",
-  "mcp__minclaw__get_local_time",
-];
-
 async function runQuery(payload: RunPayload): Promise<void> {
-  const __dirname = path.dirname(fileURLToPath(import.meta.url));
-  // always use compiled dist — works from src/ (dev) and dist/ (prod)
-  const mcpServerPath = path.resolve(__dirname, "..", "dist", "mcp-server.js");
-
   const context = payload.history
     .map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`)
     .join("\n");
-
   const prompt = context ? `${context}\n\nUser: ${payload.message}` : payload.message;
-
-  // .claude/CLAUDE.md is auto-loaded as project context (persona + communication rules)
-  // .claude/skills/agent-browser is loaded as a plugin (agent-browser skill)
-  const clauDir = path.join(__dirname, "..", ".claude");
 
   log.info(`run start  chatId=${payload.chatId}`);
 
-  for await (const msg of query({
-    prompt,
-    options: {
-      cwd: "/workspace",
-      plugins: [
-        { type: "local", path: path.join(clauDir, "skills", "agent-browser") },
-        { type: "local", path: path.join(clauDir, "skills", "weather") },
-      ],
-      allowedTools: ALLOWED_TOOLS,
-      permissionMode: "bypassPermissions" as const,
-      allowDangerouslySkipPermissions: true,
-      settingSources: ["project", "user"] as SettingSource[],
-      mcpServers: {
-        minclaw: {
-          command: "node",
-          args: [mcpServerPath],
-          env: {
-            CHAT_ID: payload.chatId,
-            HOST_URL,
-            TZ: process.env.TZ ?? "UTC",
-          },
-        },
-      },
-    },
-  })) {
+  const mcpServers = {
+    minclaw: { command: "node", args: [mcpServerPath], env: { CHAT_ID: payload.chatId, HOST_URL, TZ } },
+  };
+
+  for await (const msg of query({ prompt, options: { ...options, mcpServers } })) {
     const m = msg as Record<string, unknown>;
     if (m.type === "assistant") {
       const content = (m.message as Record<string, unknown>)?.content;

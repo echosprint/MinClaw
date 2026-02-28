@@ -19,6 +19,5 @@ await waitForHost();
 
 createServer({ enqueue }, PORT);
 
-
 log.info(`MinClaw agent running on :${PORT}`);
 log.info("---------------------------");
