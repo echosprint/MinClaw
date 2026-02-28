@@ -14,7 +14,7 @@ export function mdToHtml(text: string): string {
     .replace(/>/g, "&gt;");
 
   // 2. Horizontal rules --- → Unicode divider (Telegram has no <hr>)
-  result = result.replace(/^[ \t]*---+[ \t]*$/gm, "──────────────────────");
+  result = result.replace(/^[ \t]*---+[ \t]*$/gm, "──────────────────");
 
   // 3. Extract code blocks and inline code into placeholders so subsequent
   //    italic/bold regexes cannot match inside them or across their boundaries.
