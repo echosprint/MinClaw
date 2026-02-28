@@ -2,10 +2,11 @@
  * Convert a subset of Markdown to Telegram-compatible HTML.
  * Telegram supports: <b>, <i>, <code>, <pre>, <a>, <u>, <s>
  *
- * Code spans are extracted into placeholders before other conversions so that
- * italic/bold regexes never process their contents — preventing crossed tags
- * like <i>...<code>...</i></code> which Telegram rejects.
+ * Code spans and tables are extracted into placeholders before other
+ * conversions so italic/bold regexes never corrupt their contents.
  */
+
+
 export function mdToHtml(text: string): string {
   // 1. Escape HTML entities
   let result = text
@@ -16,8 +17,8 @@ export function mdToHtml(text: string): string {
   // 2. Horizontal rules --- → Unicode divider (Telegram has no <hr>)
   result = result.replace(/^[ \t]*---+[ \t]*$/gm, "──────────────────");
 
-  // 3. Extract code blocks and inline code into placeholders so subsequent
-  //    italic/bold regexes cannot match inside them or across their boundaries.
+  // 3. Stash code blocks, tables, and inline code so subsequent regexes
+  //    cannot match inside them or across their boundaries.
   const slots: string[] = [];
   const stash = (html: string) => {
     const marker = `\x00${slots.length}\x00`;
@@ -35,7 +36,7 @@ export function mdToHtml(text: string): string {
     stash(`<code>${code}</code>`)
   );
 
-  // 4. Apply remaining conversions (safe — no code content in result)
+  // 4. Apply remaining conversions (safe — no code/table content in result)
   result = result
     // headings # ## ### → bold
     .replace(/^#{1,6}\s+(.+)$/gm, "<b>$1</b>")
