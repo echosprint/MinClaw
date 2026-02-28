@@ -1,5 +1,5 @@
 import { createServer } from "./server.js";
-import { enqueue } from "./runner.js";
+import { enqueue, startAgent, getTZ } from "./runner.js";
 import { log } from "./log.js";
 
 const PORT = Number(process.env.AGENT_PORT ?? 14827);
@@ -16,8 +16,10 @@ async function waitForHost(): Promise<void> {
 }
 
 await waitForHost();
+await getTZ();
 
 createServer({ enqueue }, PORT);
+startAgent();
 
 log.info(`MinClaw agent running on :${PORT}`);
 log.info("---------------------------");

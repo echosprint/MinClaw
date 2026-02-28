@@ -14,7 +14,9 @@ vi.stubGlobal(
 );
 
 import { query } from "@anthropic-ai/claude-agent-sdk";
-import { enqueue } from "../src/runner.js";
+import { enqueue, startAgent } from "../src/runner.js";
+
+startAgent();
 
 const mockQuery = vi.mocked(query);
 const flush = () => new Promise<void>((r) => setTimeout(r, 0));

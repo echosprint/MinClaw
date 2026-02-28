@@ -47,13 +47,6 @@ const ALLOWED_TOOLS = [
   "mcp__minclaw__get_chat_history",
 ];
 
-const TZ = await fetch(`${HOST_URL}/timezone`)
-  .then((r) => r.json() as Promise<{ timezone: string }>)
-  .then((d) => d.timezone)
-  .catch((err) => {
-    log.error(`timezone fetch failed: ${err}`);
-    return "UTC";
-  });
 
 const options = {
   cwd: "/workspace",
@@ -96,6 +89,28 @@ class MessageStream {
 
 const globalStream = new MessageStream();
 
+function createTZFetcher() {
+  let TZ: string | undefined;
+  return async (): Promise<string> => {
+    if (!TZ) {
+      TZ = await fetch(`${HOST_URL}/timezone`)
+        .then((r) => r.json() as Promise<{ timezone: string }>)
+        .then((d) => d.timezone)
+        .catch((err) => {
+          log.error(`timezone fetch failed: ${err}`);
+          return "UTC";
+        });
+    }
+    return TZ;
+  };
+}
+
+export const getTZ = createTZFetcher();
+
+export function startAgent(): void {
+  void drainMessages();
+}
+
 async function drainMessages(): Promise<never> {
   for await (const p of globalStream) {
     await runQuery(p).catch((err) => log.error(`runQuery error chatId=${p.chatId}: ${err}`));
@@ -103,11 +118,6 @@ async function drainMessages(): Promise<never> {
   log.error("globalStream ended unexpectedly");
   process.exit(1);
 }
-
-// Start the drain loop: runs for the lifetime of the process, processing
-// one message at a time. enqueue() feeds payloads in; errors per-message
-// are logged and skipped so the loop never stops.
-void drainMessages();
 
 export function enqueue(payload: RunPayload): void {
   globalStream.push(payload);
@@ -126,7 +136,7 @@ async function runQuery(payload: RunPayload): Promise<void> {
     minclaw: {
       command: "node",
       args: [mcpServerPath],
-      env: { CHAT_ID: payload.chatId, HOST_URL, TZ },
+      env: { CHAT_ID: payload.chatId, HOST_URL, TZ: await getTZ() },
     },
   };
 

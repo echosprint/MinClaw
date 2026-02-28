@@ -3,7 +3,7 @@ import { describe, test, expect, vi, beforeAll, afterAll, beforeEach } from "vit
 import http from "http";
 import { createServer } from "../src/server.js";
 import { createHandlers } from "../src/mcp-handlers.js";
-import { enqueue } from "../src/runner.js";
+import { enqueue, startAgent } from "../src/runner.js";
 
 // Mock the SDK — implementation is set per-test via mockImplementation
 vi.mock("@anthropic-ai/claude-agent-sdk", () => ({ query: vi.fn() }));
@@ -65,6 +65,7 @@ describe("agent integration", () => {
         });
         hostServer.listen(HOST_PORT, () => {
           agentServer = createServer({ enqueue }, AGENT_PORT);
+          startAgent();
           resolve();
         });
       }),
