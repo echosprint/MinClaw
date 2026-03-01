@@ -329,7 +329,6 @@ docker run --rm -it --entrypoint /bin/bash minclaw-agent:latest
 ### Test a full agent run manually
 
 ```bash
-source .env
 curl -s -X POST http://localhost:14827/enqueue \
   -H "Content-Type: application/json" \
   -d '{"chatId":"debug-test","message":"Say hello","history":[],"timestamp":"2024-01-01T00:00:00.000Z"}'
