@@ -137,7 +137,7 @@ Telegram ──► Host (Node.js / macOS or Linux)
                ├─ Grammy bot       — receives messages, sends replies
                ├─ SQLite           — chat history + scheduled jobs
                ├─ HTTP server      — receives callbacks from agent
-               └─ Job scheduler    — polls for due jobs every 60 s
+               └─ Job scheduler    — polls for due jobs every 10 s
 
                         │  POST /enqueue
                         ▼
