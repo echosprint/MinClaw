@@ -1,5 +1,5 @@
 import http from "http";
-import type { RunPayload } from "./runner.js";
+import type { RunPayload } from "./enqueuener.js";
 import { log } from "./log.js";
 
 export interface AgentServerDeps {
@@ -33,7 +33,7 @@ function readBody(req: http.IncomingMessage): Promise<unknown> {
  * The host POSTs incoming chat messages here for async processing.
  * Routes:
  *   GET  /health  — liveness probe; also reports whether Claude auth token is present
- *   POST /run     — receive a chat message and enqueue it for async agent processing
+ *   POST /enqueue     — receive a chat message and enqueue it for async agent processing
  */
 export function createServer(deps: AgentServerDeps, port: number): http.Server {
   const server = http.createServer(async (req, res) => {
@@ -48,7 +48,7 @@ export function createServer(deps: AgentServerDeps, port: number): http.Server {
         return;
       }
 
-      if (route === "POST /run") {
+      if (route === "POST /enqueue") {
         const payload = (await readBody(req)) as RunPayload;
         log.info(
           `request  chatId=${payload.chatId} ts=${payload.timestamp} message="${payload.message.slice(0, 80)}"`,

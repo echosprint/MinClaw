@@ -6,13 +6,9 @@
  * conversions so italic/bold regexes never corrupt their contents.
  */
 
-
 export function mdToHtml(text: string): string {
   // 1. Escape HTML entities
-  let result = text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+  let result = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
   // 2. Horizontal rules --- → Unicode divider (Telegram has no <hr>)
   result = result.replace(/^[ \t]*---+[ \t]*$/gm, "──────────────────");
@@ -27,14 +23,10 @@ export function mdToHtml(text: string): string {
   };
 
   // code blocks ```lang\n...\n``` (must come before inline code)
-  result = result.replace(/```[\w]*\n?([\s\S]+?)```/g, (_, code) =>
-    stash(`<pre>${code}</pre>`)
-  );
+  result = result.replace(/```[\w]*\n?([\s\S]+?)```/g, (_, code) => stash(`<pre>${code}</pre>`));
 
   // inline code `text`
-  result = result.replace(/`([^`\n]+)`/g, (_, code) =>
-    stash(`<code>${code}</code>`)
-  );
+  result = result.replace(/`([^`\n]+)`/g, (_, code) => stash(`<code>${code}</code>`));
 
   // 4. Apply remaining conversions (safe — no code/table content in result)
   result = result

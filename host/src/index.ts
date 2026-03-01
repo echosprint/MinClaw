@@ -1,9 +1,16 @@
+/*
+ * Host entrypoint. Boot sequence:
+ * 1. db.init()       — open SQLite, create tables if needed
+ * 2. createServer()  — HTTP server for agent callbacks (/send, /schedule, /log, etc.)
+ * 3. createBot()     — Grammy Telegram bot, start long-polling
+ * 4. startScheduler  — poll due cron jobs every 60 s and dispatch to agent
+ */
 import { Bot } from "grammy";
 import * as db from "./db";
 import { createBot } from "./bot";
 import { createServer } from "./server";
 import { start as startScheduler } from "./scheduler";
-import { run as agentRun, restartAgent as agentRestartAgent } from "./agent";
+import { dispatch, restartAgent as agentRestartAgent } from "./agent";
 import { log } from "./log";
 import { mdToHtml } from "./markdown";
 
@@ -38,7 +45,7 @@ createServer(
 bot = createBot(BOT_TOKEN, {
   saveMessage: db.saveMessage,
   getHistory: db.getHistory,
-  runAgent: agentRun,
+  dispatch,
   clearHistory: db.clearHistory,
   restartAgent: agentRestartAgent,
 });
@@ -57,7 +64,7 @@ startScheduler({
   getDueJobs: db.getDueJobs,
   advanceJob: db.advanceJob,
   deactivateJob: db.deactivateJob,
-  runAgent: agentRun,
+  dispatch,
 });
 
 log.info("---------------------------");

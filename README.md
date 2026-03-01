@@ -177,6 +177,20 @@ MinClaw/
 └── data/memory/            — agent workspace memory (persisted across restarts)
 ```
 
+## Design Decisions
+
+**Private 1:1 chat only.** MinClaw is a personal assistant, not a group bot. `chatId` is the private conversation ID between you and the bot — history, scheduled jobs, and identity all belong to one person. Group chats are out of scope: the bot would respond to every message, all members would share one history, and sender identity is never stored. Supporting groups would require per-user `chatId`, explicit `@mention` filtering, and sender attribution throughout.
+
+**Sequential agent runs.** Messages are queued and processed one at a time. Only one Claude session is active at any moment. This keeps the system simple and avoids race conditions on shared state (history, jobs). A message sent while the agent is busy waits in the queue.
+
+**Fire-and-forget from host to agent.** The host POSTs to `/run` and immediately gets a `202` — it does not wait for Claude to finish. The agent replies asynchronously via `POST /send` back to the host. This keeps the host responsive and decouples Telegram's webhook timeout from Claude's processing time.
+
+**MCP server spawned fresh per run.** Each agent run starts a new MCP subprocess with `CHAT_ID` injected via environment variable. There is no persistent MCP daemon. This keeps the MCP server stateless and scoped to exactly one conversation.
+
+**Agent has no Telegram credentials.** The agent container cannot send messages directly to Telegram — it must call `send_message` (MCP tool) → host `/send` → Grammy. This means all outbound delivery is auditable through one path and the agent cannot act outside the host's control.
+
+**Text messages only.** Photos, stickers, voice messages, and other media types are silently ignored. The agent receives plain text and responds in Markdown.
+
 ## How It Works
 
 When you send a message:

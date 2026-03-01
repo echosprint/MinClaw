@@ -1,3 +1,8 @@
+/*
+ * Host logger. Writes colorized output to stdout and appends plain text to
+ * log/minclaw.log. The agent cannot write files directly — it calls POST /log
+ * on the host, which forwards the message here under the [agt] prefix.
+ */
 import fs from "fs";
 import path from "path";
 

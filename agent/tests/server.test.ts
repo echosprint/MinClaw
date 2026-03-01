@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeAll, afterAll } from "vitest";
 import http from "http";
 import { createServer } from "../src/server.js";
-import type { RunPayload } from "../src/runner.js";
+import type { RunPayload } from "../src/enqueuener.js";
 
 const PORT = 4099;
 
@@ -22,8 +22,8 @@ describe("agent server", () => {
 
   afterAll(() => server.close());
 
-  test("POST /run → 202 immediately", async () => {
-    const res = await fetch(`http://localhost:${PORT}/run`, {
+  test("POST /enqueue → 202 immediately", async () => {
+    const res = await fetch(`http://localhost:${PORT}/enqueue`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ chatId: "c1", message: "hello", history: [] }),
@@ -31,9 +31,9 @@ describe("agent server", () => {
     expect(res.status).toBe(202);
   });
 
-  test("POST /run passes payload to runner asynchronously", async () => {
+  test("POST /enqueue passes payload to runner asynchronously", async () => {
     runs.length = 0;
-    await fetch(`http://localhost:${PORT}/run`, {
+    await fetch(`http://localhost:${PORT}/enqueue`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ chatId: "c2", message: "test msg", history: [] }),

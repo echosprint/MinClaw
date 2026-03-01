@@ -1,3 +1,8 @@
+/*
+ * Grammy bot: receives Telegram messages, saves them to DB, and forwards
+ * to the agent. Commands: /start, /chatid, /ping (agent health check),
+ * /clear (wipe history + restart agent container).
+ */
 import { Bot, type Context } from "grammy";
 import type { UserFromGetMe } from "@grammyjs/types";
 import { HttpsProxyAgent } from "https-proxy-agent";
@@ -8,7 +13,7 @@ import { log } from "./log";
 export interface BotDeps {
   saveMessage: (chatId: string, role: "user" | "assistant", content: string) => void;
   getHistory: (chatId: string) => Message[];
-  runAgent: (payload: RunPayload) => Promise<void>;
+  dispatch: (payload: RunPayload) => Promise<void>;
   clearHistory: (chatId: string) => void;
   restartAgent: () => Promise<void>;
 }
@@ -44,7 +49,7 @@ export function createBot(token: string, deps: BotDeps, botInfo?: UserFromGetMe)
     const sentAt = Date.now();
 
     deps.saveMessage(chatId, "user", pingMsg);
-    await deps.runAgent({ chatId, message: pingMsg, history: historyBefore });
+    await deps.dispatch({ chatId, message: pingMsg, history: historyBefore });
 
     await new Promise((r) => setTimeout(r, 10_000));
 
@@ -72,6 +77,13 @@ export function createBot(token: string, deps: BotDeps, botInfo?: UserFromGetMe)
     bot.command(name, handler);
   }
 
+  /*
+   * Only plain text messages reach the agent — photos, stickers, etc. are ignored.
+   * Designed for private 1:1 chat only. Group chats are out of scope: the bot
+   * would respond to every message, history and scheduled jobs would be shared
+   * across all members, and sender identity is never stored — "user" is always
+   * assumed to be the single owner of this private conversation.
+   */
   bot.on("message:text", async (ctx) => {
     const chatId = String(ctx.chat!.id);
     const text = ctx.message.text;
@@ -95,7 +107,7 @@ export function createBot(token: string, deps: BotDeps, botInfo?: UserFromGetMe)
       .slice(0, -1) // exclude the message we just saved
       .map((m) => ({ role: m.role, content: m.content }));
 
-    await deps.runAgent({ chatId, message: text, history });
+    await deps.dispatch({ chatId, message: text, history });
   });
 
   return bot;

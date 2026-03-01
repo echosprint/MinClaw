@@ -1,3 +1,9 @@
+/*
+ * Host-side client for the agent container.
+ * dispatch()     — POST a chat payload to /enqueue (fire-and-forget, agent replies async)
+ * health()       — check agent liveness and Claude auth status
+ * restartAgent() — docker compose restart agent (used by /clear command)
+ */
 import { log } from "./log.js";
 
 export interface Message {
@@ -14,11 +20,11 @@ export interface RunPayload {
 
 const AGENT_URL = process.env.AGENT_URL ?? "http://localhost:14827";
 
-export async function run(payload: RunPayload): Promise<void> {
+export async function dispatch(payload: RunPayload): Promise<void> {
   const body = { ...payload, timestamp: new Date().toISOString() };
   const tag = payload.alert ? "[alert]" : "agent send";
   log.info(`${tag} chatId=${payload.chatId} msg="${payload.message.slice(0, 80)}"`);
-  await fetch(`${AGENT_URL}/run`, {
+  await fetch(`${AGENT_URL}/enqueue`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),

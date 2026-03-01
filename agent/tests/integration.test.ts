@@ -87,7 +87,7 @@ describe("agent integration", () => {
 
   // Helper: POST a Telegram message to the agent server
   function postMessage(chatId: string, message: string) {
-    return fetch(`http://localhost:${AGENT_PORT}/run`, {
+    return fetch(`http://localhost:${AGENT_PORT}/enqueue`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ chatId, message, history: [], timestamp: new Date().toISOString() }),

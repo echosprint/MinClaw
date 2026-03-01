@@ -2,7 +2,7 @@
  * Agent entrypoint. Boot sequence:
  * 1. waitForHost  — poll host /health until reachable (host may start after agent)
  * 2. getTZ        — fetch timezone from host so scheduled jobs use local time
- * 3. createServer — start HTTP server, accepts /run payloads from host
+ * 3. createServer — start HTTP server, accepts /enqueue payloads from host
  * 4. startAgent   — begin draining the message queue (runs forever)
  */
 import { createServer } from "./server.js";
