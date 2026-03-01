@@ -116,7 +116,8 @@ async function runQuery(payload: RunPayload): Promise<void> {
           if (b.type === "text") {
             log.info(`agent text  "${String(b.text).slice(0, 500)}"`);
           } else if (b.type === "tool_use") {
-            log.info(`tool use    ${b.name}`);
+            const inputSummary = JSON.stringify(b.input ?? {}).slice(0, 200);
+            log.info(`tool use    ${b.name}  ${inputSummary}`);
           }
         }
       }
