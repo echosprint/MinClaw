@@ -111,6 +111,17 @@ WebSearch: "{city} weather"
 
 Fetch the most relevant result URL with `WebFetch` and extract current conditions.
 
+## Reply Format
+
+Write a short, conversational message — **no tables, no bullet lists**. Cover:
+
+1. Today's conditions (temperature, feels-like, condition emoji)
+2. The week ahead in one sentence (trend: warmer/cooler, rain expected, etc.)
+
+Target **50–80 words**. Example:
+
+> Shanghai today: ⛅ 18°C (feels 16°C), light breeze. Expect clouds this afternoon with a small chance of rain by evening. The rest of the week stays mild — temperatures holding around 17–20°C with a brief sunny stretch Wednesday before another rainy period Thursday into Friday.
+
 ## Notes
 
 - Try wttr.in first — it is significantly faster than searching
