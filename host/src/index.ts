@@ -3,7 +3,7 @@
  * 1. db.init()       — open SQLite, create tables if needed
  * 2. createServer()  — HTTP server for agent callbacks (/send, /schedule, /log, etc.)
  * 3. createBot()     — Grammy Telegram bot, start long-polling
- * 4. startScheduler  — poll due cron jobs every 60 s and dispatch to agent
+ * 4. startScheduler  — poll due cron jobs every 10 s and dispatch to agent
  */
 import { Bot } from "grammy";
 import * as db from "./db";

@@ -43,7 +43,7 @@ If you want to understand how the loop works, start here.
 ## Requirements
 
 - macOS or Linux
-- Node.js 20+
+- Node.js 22+
 - [Claude Code](https://claude.ai/code)
 - [Docker](https://www.docker.com) (macOS/Linux)
 

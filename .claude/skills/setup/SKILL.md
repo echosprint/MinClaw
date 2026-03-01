@@ -10,7 +10,7 @@ Run setup steps automatically. Only pause when user action is required (obtainin
 **Project layout:**
 
 - `host/` — Node.js Telegram bot + HTTP server + SQLite scheduler (runs on host)
-- `agent/` — Claude Code agent in Docker container (receives `/run` requests from host)
+- `agent/` — Claude Code agent in Docker container (receives `/enqueue` requests from host)
 - `.env` — secrets loaded by both `docker compose` and `pnpm dev:host`
 - `docker-compose.yml` — runs the agent container
 - `agent/build.sh` — builds `minclaw-agent-base` (slow, once) then `minclaw-agent` (fast, per change)
@@ -282,14 +282,7 @@ If **MISSING**, build it (takes several minutes — Chromium is large):
 cd agent && bash build.sh --base
 ```
 
-If the build needs a proxy:
-
-```bash
-cd agent && docker build \
-  --build-arg https_proxy="${DOCKER_BUILD_PROXY}" \
-  --build-arg http_proxy="${DOCKER_BUILD_PROXY}" \
-  -f Dockerfile.base -t minclaw-agent-base:latest .
-```
+If the build needs a proxy, set `DOCKER_BUILD_PROXY` in `.env` — `build.sh` sources `.env` automatically and passes the proxy as build-args. No manual docker command needed.
 
 ### 4b. Agent image (fast, rebuild on code changes)
 
@@ -318,9 +311,9 @@ docker image inspect minclaw-agent:latest > /dev/null 2>&1 && echo "OK" || echo 
 mkdir -p log data/db data/memory
 ```
 
-- `log/` — shared log volume mounted into the agent container
+- `log/` — log file written by the host process; agent forwards log lines to the host via POST /log
 - `data/db/` — SQLite database (`minclaw.db`) lives here, auto-created by host on first run
-- `data/memory/` — agent's persistent memory, also mounted into the container
+- `data/memory/` — agent's persistent memory, mounted into the container at `/workspace/memory`
 
 ---
 
@@ -405,7 +398,7 @@ pnpm stop
 **Rebuild agent after code changes:**
 
 ```bash
-pnpm reload
+pnpm reboot
 ```
 
 This runs: `pnpm stop` → `agent/build.sh` → `docker compose up -d` → `pnpm dev:host`.
@@ -419,7 +412,7 @@ pnpm clear-jobs
 **Check scheduled jobs in the database:**
 
 ```bash
-sqlite3 data/db/minclaw.db "SELECT id, chat_id, cron, task, active FROM jobs"
+sqlite3 data/db/minclaw.db "SELECT id, chat_id, cron, task, next_run, active, one_shot FROM jobs"
 ```
 
 ---
