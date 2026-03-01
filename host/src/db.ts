@@ -23,6 +23,12 @@ export interface Job {
 
 let _db: Database.Database;
 
+/*
+ * messages — conversation history per chat, used to build prompt context.
+ *            ORDER BY id (not created_at) to avoid same-ms collision on rapid inserts.
+ * jobs     — scheduled tasks: next_run is a Unix ms timestamp; active=0 means inactive
+ *            one_shot=1 means the job deactivates after its first successful run.
+ */
 export function init(path = "../data/db/minclaw.db") {
   fs.mkdirSync("../data/db", { recursive: true });
   _db = new Database(path);
@@ -86,6 +92,7 @@ export function getDueJobs(): Job[] {
     .all(Date.now()) as Job[];
 }
 
+// Advance a recurring job to its next cron tick after it has fired.
 export function advanceJob(id: number, nextRun: number): void {
   _db.prepare("UPDATE jobs SET next_run = ? WHERE id = ?").run(nextRun, id);
 }

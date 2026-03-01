@@ -53,11 +53,13 @@ export function createHandlers(hostUrl: string, chatId: string) {
     log.info(`schedule_job chatId=${chatId} cron="${cron}" one_shot=${!!one_shot} task="${task}"`);
     const res = await post("/schedule", { chatId, cron, task, one_shot });
     const data = (await res.json()) as { jobId?: number; error?: string };
+
     if (!res.ok) {
       const msg = data.error ?? `schedule failed: ${res.status}`;
       log.info(`schedule_job error=${msg}`);
       return ok(msg);
     }
+
     log.info(`schedule_job result=jobId#${data.jobId}`);
     return ok(`Scheduled job #${data.jobId}`);
   };
@@ -65,9 +67,12 @@ export function createHandlers(hostUrl: string, chatId: string) {
   const list_tasks = async (): Promise<ToolResult> => {
     log.info(`list_tasks chatId=${chatId}`);
     const res = await get(`/jobs?chatId=${encodeURIComponent(chatId)}`);
+
     if (!res.ok) return ok(`list_tasks failed: ${res.status}`);
+
     const jobs = (await res.json()) as Job[];
     if (!jobs.length) return ok("No scheduled tasks.");
+
     const lines = jobs.map((j, i) => {
       const next = new Date(j.next_run).toLocaleString("en-US", { timeZone: process.env.TZ! });
       const type = j.one_shot ? "one-time" : "recurring";
@@ -75,6 +80,7 @@ export function createHandlers(hostUrl: string, chatId: string) {
       const task = cp.length > 60 ? cp.slice(0, 60).join("") + "…" : j.task;
       return `- #${i + 1} ${task} (${j.cron}, ${type}) — next: ${next} [job_id:${j.id}]`;
     });
+
     return ok(`Scheduled tasks:\n${lines.join("\n")}`);
   };
 
@@ -88,9 +94,12 @@ export function createHandlers(hostUrl: string, chatId: string) {
 
   const get_chat_history = async ({ limit }: { limit?: number }): Promise<ToolResult> => {
     const res = await get(`/history?chatId=${encodeURIComponent(chatId)}&limit=${limit ?? 20}`);
+
     if (!res.ok) return ok(`get_chat_history failed: ${res.status}`);
+
     const messages = (await res.json()) as { role: string; content: string }[];
     if (!messages.length) return ok("No chat history.");
+
     const lines = messages.map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`);
     return ok(lines.join("\n\n"));
   };
