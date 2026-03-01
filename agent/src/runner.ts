@@ -3,7 +3,7 @@ import path from "path";
 import { log } from "./log.js";
 import { globalStream } from "./stream.js";
 import { getTZ } from "./tz.js";
-import { HOST_URL, mcpServerPath, gmailMcpServerPath, clauDir } from "./config.js";
+import { HOST_URL, mcpServerPath, gmailMcpServerPath, claudeDir } from "./config.js";
 
 export interface Message {
   role: "user" | "assistant";
@@ -53,10 +53,10 @@ const ALLOWED_TOOLS = [
 const options = {
   cwd: "/workspace",
   plugins: [
-    { type: "local" as const, path: path.join(clauDir, "skills", "agent-browser") },
-    { type: "local" as const, path: path.join(clauDir, "skills", "weather") },
-    { type: "local" as const, path: path.join(clauDir, "skills", "github") },
-    { type: "local" as const, path: path.join(clauDir, "skills", "github") },
+    { type: "local" as const, path: path.join(claudeDir, "skills", "agent-browser") },
+    { type: "local" as const, path: path.join(claudeDir, "skills", "weather") },
+    { type: "local" as const, path: path.join(claudeDir, "skills", "github") },
+    { type: "local" as const, path: path.join(claudeDir, "skills", "news") },
   ],
   allowedTools: ALLOWED_TOOLS,
   permissionMode: "bypassPermissions" as const,
