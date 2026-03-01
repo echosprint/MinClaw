@@ -1,5 +1,5 @@
 import http from "http";
-import type { RunPayload } from "./enqueuener.js";
+import type { RunPayload } from "./runner.js";
 import { log } from "./log.js";
 
 export interface AgentServerDeps {

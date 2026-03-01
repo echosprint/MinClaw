@@ -24,7 +24,7 @@ describe("scheduler: tick", () => {
       getDueJobs: () => [makeJob()],
       advanceJob: () => {},
       deactivateJob: () => {},
-      runAgent: async (p) => {
+      dispatch: async (p) => {
         called.push(p);
       },
     });
@@ -41,7 +41,7 @@ describe("scheduler: tick", () => {
       getDueJobs: () => [makeJob()],
       advanceJob: () => {},
       deactivateJob: () => {},
-      runAgent: async (p) => {
+      dispatch: async (p) => {
         called.push(p);
       },
     });
@@ -58,7 +58,7 @@ describe("scheduler: tick", () => {
         advanced.push({ id, nextRun });
       },
       deactivateJob: () => {},
-      runAgent: async () => {},
+      dispatch: async () => {},
     });
 
     expect(advanced.length).toBe(1);
@@ -73,7 +73,7 @@ describe("scheduler: tick", () => {
       getDueJobs: () => [],
       advanceJob: () => {},
       deactivateJob: () => {},
-      runAgent: async () => {
+      dispatch: async () => {
         agentCalled = true;
       },
     });

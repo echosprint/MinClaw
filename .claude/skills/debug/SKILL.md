@@ -12,13 +12,12 @@ Host (macOS/Linux)                     Container (Linux)
 ──────────────────────────────────────────────────────────
 host/src/agent.ts                      agent/src/
   │                                      │
-  │  POST /run (chatId, message,         │  runner.ts — Claude Agent SDK loop
+  │  POST /enqueue (chatId, message,     │  runner.ts — Claude Agent SDK loop
   │  history) ─────────────────────────> │    │
   │                                      │    ├── MCP server (mcp-server.ts)
   │  <── mcp__minclaw__send_message ─────│    │   POST HOST_URL/send
   │  <── mcp__minclaw__schedule_job ─────│    │   POST HOST_URL/schedule
   │                                      │
-  ├── ./log ─────────────────────> /app/log
   └── ./data/memory ──────────────> /workspace/memory
 
 Host HTTP :13821   ←──────────────────  Agent HTTP :14827
@@ -28,14 +27,14 @@ Host HTTP :13821   ←──────────────────  Ag
 
 - The agent container calls back to the host via `http://host.docker.internal:13821`
 - The MCP server runs as a subprocess inside the container, spawned by the Claude Agent SDK
-- `log/minclaw.log` is shared: both agent (`[agent]` prefix) and host (`[bot]` prefix) append to it
+- `log/minclaw.log` is shared: both agent (`[agt]` prefix) and host (`[bot]` prefix) append to it
 - `data/memory/` persists agent memory across runs
 
 ## Log Locations
 
 | Log                    | Location            | Content                                                           |
 |------------------------|---------------------|-------------------------------------------------------------------|
-| **Agent** `[agent]`    | `log/minclaw.log`   | Run start/done, tool calls, send_message, errors (from container) |
+| **Agent** `[agt]`      | `log/minclaw.log`   | Run start/done, tool calls, send_message, errors (from container) |
 | **Host** `[bot]`       | `log/minclaw.log`   | Bot polling, scheduler ticks, `/send` and `/schedule` calls       |
 
 Both processes append to the same file. Watch in real time:
@@ -48,7 +47,7 @@ Filter by source:
 
 ```bash
 # Agent only
-grep '\[agent\]' log/minclaw.log | tail -20
+grep '\[agt\]' log/minclaw.log | tail -20
 
 # Host only
 grep '\[bot\]' log/minclaw.log | tail -20
@@ -63,7 +62,7 @@ echo "=== MinClaw Diagnostics ==="
 
 echo -e "\n1. Authentication configured?"
 [ -f .env ] && \
-  (grep -q "CLAUDE_CODE_OAUTH_TOKEN=sk-" .env || grep -q "ANTHROPIC_API_KEY=sk-" .env) \
+  (grep -q "CLAUDE_CODE_OAUTH_TOKEN=." .env || grep -q "ANTHROPIC_API_KEY=." .env) \
   && echo "OK" || echo "MISSING — add CLAUDE_CODE_OAUTH_TOKEN or ANTHROPIC_API_KEY to .env"
 
 echo -e "\n2. Telegram bot token set?"
@@ -331,9 +330,9 @@ docker run --rm -it --entrypoint /bin/bash minclaw-agent:latest
 
 ```bash
 source .env
-curl -s -X POST http://localhost:14827/run \
+curl -s -X POST http://localhost:14827/enqueue \
   -H "Content-Type: application/json" \
-  -d '{"chatId":"debug-test","message":"Say hello","history":[]}'
+  -d '{"chatId":"debug-test","message":"Say hello","history":[],"timestamp":"2024-01-01T00:00:00.000Z"}'
 # Returns 202 immediately; watch log/minclaw.log for the result
 tail -f log/minclaw.log
 ```
@@ -360,14 +359,26 @@ query({
   prompt,               // history + latest message formatted as plain text
   options: {
     cwd: '/workspace',
-    plugins: [{ type: 'local', path: '.claude/skills/agent-browser' }],
+    plugins: [
+      { type: 'local', path: '.claude/skills/agent-browser' },
+      { type: 'local', path: '.claude/skills/weather' },
+      { type: 'local', path: '.claude/skills/github' },
+      { type: 'local', path: '.claude/skills/news' },
+    ],
     allowedTools: [
+      // Core tools
       'Bash', 'Read', 'Write', 'Edit', 'Glob', 'Grep',
       'WebSearch', 'WebFetch',
       'Task', 'TaskOutput', 'TaskStop',
       'TodoWrite', 'ToolSearch', 'Skill', 'NotebookEdit',
-      'mcp__minclaw__send_message',
-      'mcp__minclaw__schedule_job',
+      // MinClaw MCP tools
+      'mcp__minclaw__send_message', 'mcp__minclaw__schedule_job',
+      'mcp__minclaw__list_tasks', 'mcp__minclaw__cancel_task',
+      'mcp__minclaw__get_local_time', 'mcp__minclaw__get_chat_history',
+      // Gmail MCP tools
+      'mcp__gmail__check_gmail_service', 'mcp__gmail__draft_email',
+      'mcp__gmail__send_email', 'mcp__gmail__summarize_emails',
+      'mcp__gmail__add_calendar_event',
     ],
     permissionMode: 'bypassPermissions',
     allowDangerouslySkipPermissions: true,   // required with bypassPermissions
@@ -376,7 +387,12 @@ query({
       minclaw: {
         command: 'node',
         args: ['/app/dist/mcp-server.js'],
-        env: { CHAT_ID: payload.chatId, HOST_URL },
+        env: { CHAT_ID: payload.chatId, HOST_URL, TZ },
+      },
+      gmail: {
+        command: 'node',
+        args: ['/app/dist/gmail-mcp-server.js'],
+        env: { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN },
       },
     },
   },
@@ -394,7 +410,7 @@ query({
 cd agent && bash build.sh
 
 # Full stop → rebuild → start
-pnpm reload
+pnpm reboot
 
 # Force clean rebuild (clears Docker layer cache)
 docker builder prune -f

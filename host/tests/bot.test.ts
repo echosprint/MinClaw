@@ -28,7 +28,7 @@ function makeBotWithMockedApi(overrides?: {
     {
       saveMessage: db.saveMessage.bind(db),
       getHistory: db.getHistory.bind(db),
-      runAgent,
+      dispatch: runAgent,
       clearHistory: overrides?.clearHistory ?? vi.fn(),
       restartAgent: overrides?.restartAgent ?? vi.fn(async () => {}),
     },
