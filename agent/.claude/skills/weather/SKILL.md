@@ -27,11 +27,24 @@ Get current weather and forecasts using `wttr.in` via `WebFetch` — no browser,
 
 ## Location
 
-If the user did not specify a location, call `send_message` to ask:
+**Check memory first.** Before asking, read `/workspace/memory/preferences.md` (if it exists) for a saved home city.
+
+If a home city is found, use it silently — do not announce that you're using it.
+
+If no location is found in memory and the user didn't specify one, call `send_message` to ask:
 
 > "Which city would you like the weather for?"
 
 City names in English or Chinese both work (`Beijing`, `北京`, `New York`, `London`).
+
+**Save location to memory.** Whenever you learn the user's city — from an explicit request, a casual mention ("Shanghai weather"), or any other context clue — save it to `/workspace/memory/preferences.md`:
+
+```markdown
+## Location
+Home city: Shanghai
+```
+
+If the file already exists, update the `Home city` line. This way you never need to ask again.
 
 ## Commands
 
