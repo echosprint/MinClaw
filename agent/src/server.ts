@@ -28,12 +28,21 @@ function readBody(req: http.IncomingMessage): Promise<unknown> {
   });
 }
 
+/*
+ * Agent container's inbound HTTP server.
+ * The host POSTs incoming chat messages here for async processing.
+ * Routes:
+ *   GET  /health  — liveness probe; also reports whether Claude auth token is present
+ *   POST /run     — receive a chat message and enqueue it for async agent processing
+ */
 export function createServer(deps: AgentServerDeps, port: number): http.Server {
   const server = http.createServer(async (req, res) => {
     try {
       const route = `${req.method} ${req.url}`;
 
       if (route === "GET /health") {
+        // CLAUDE_CODE_OAUTH_TOKEN must be set for the agent to authenticate with Claude.
+        // The host checks this to detect misconfiguration early.
         const claude = !!process.env.CLAUDE_CODE_OAUTH_TOKEN;
         respond(res, 200, { ok: true, claude });
         return;
@@ -44,7 +53,9 @@ export function createServer(deps: AgentServerDeps, port: number): http.Server {
         log.info(
           `request  chatId=${payload.chatId} ts=${payload.timestamp} message="${payload.message.slice(0, 80)}"`,
         );
-        // 202 immediately — agent works async
+        // Respond 202 immediately so the host isn't blocked waiting.
+        // The agent processes the message asynchronously via the queue;
+        // replies reach the user through mcp__minclaw__send_message → host /send.
         respond(res, 202);
         deps.enqueue(payload);
         return;

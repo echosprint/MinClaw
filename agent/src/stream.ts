@@ -1,3 +1,10 @@
+/*
+ * Single-consumer async FIFO queue (like Go's chan or Rust's mpsc).
+ * HTTP server pushes payloads; runner.ts drains them one at a time via
+ * `for await`, serialising agent runs to one active Claude session.
+ * Empty queue suspends the iterator by parking a Promise resolver in
+ * `waiting`; push() resolves it to wake the consumer.
+ */
 import type { RunPayload } from "./runner.js";
 
 class MessageStream {

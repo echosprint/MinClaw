@@ -1,3 +1,8 @@
+/*
+ * Gmail/Calendar MCP server — same pattern as mcp-server.ts but for Google APIs.
+ * Spawned as a subprocess by runner.ts; credentials injected via env vars.
+ * Exposes: check_gmail_service, draft_email, send_email, summarize_emails, add_calendar_event.
+ */
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
@@ -20,9 +25,20 @@ server.registerTool(
 );
 
 const replySchema = {
-  thread_id: z.string().optional().describe("Gmail thread ID from summarize_emails — required when replying to keep the conversation threaded"),
-  in_reply_to: z.string().optional().describe("Message-ID header of the email being replied to (from summarize_emails)"),
-  references: z.string().optional().describe("References header chain from the original email (from summarize_emails)"),
+  thread_id: z
+    .string()
+    .optional()
+    .describe(
+      "Gmail thread ID from summarize_emails — required when replying to keep the conversation threaded",
+    ),
+  in_reply_to: z
+    .string()
+    .optional()
+    .describe("Message-ID header of the email being replied to (from summarize_emails)"),
+  references: z
+    .string()
+    .optional()
+    .describe("References header chain from the original email (from summarize_emails)"),
 };
 
 server.registerTool(
@@ -33,7 +49,11 @@ server.registerTool(
     inputSchema: {
       to: z.string().describe("Recipient email address"),
       subject: z.string().describe("Email subject line — prefix with 'Re: ' when replying"),
-      body: z.string().describe("Plain text email body — include the quoted original at the bottom when replying"),
+      body: z
+        .string()
+        .describe(
+          "Plain text email body — include the quoted original at the bottom when replying",
+        ),
       ...replySchema,
     },
   },
@@ -48,7 +68,11 @@ server.registerTool(
     inputSchema: {
       to: z.string().describe("Recipient email address"),
       subject: z.string().describe("Email subject line — prefix with 'Re: ' when replying"),
-      body: z.string().describe("Plain text email body — include the quoted original at the bottom when replying"),
+      body: z
+        .string()
+        .describe(
+          "Plain text email body — include the quoted original at the bottom when replying",
+        ),
       ...replySchema,
     },
   },

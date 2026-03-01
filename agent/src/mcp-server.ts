@@ -1,3 +1,8 @@
+/*
+ * MCP server that exposes MinClaw tools to Claude over stdio.
+ * Spawned as a subprocess by runner.ts once per agent run, with CHAT_ID and
+ * HOST_URL injected via env. Tool calls are forwarded to the host HTTP API.
+ */
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";

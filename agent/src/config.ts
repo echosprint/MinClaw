@@ -1,3 +1,7 @@
+/*
+ * Shared constants. MCP server paths point to compiled JS in dist/ —
+ * they are spawned as subprocesses by runner.ts for each agent run.
+ */
 import path from "path";
 import { fileURLToPath } from "url";
 

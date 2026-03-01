@@ -1,3 +1,8 @@
+/*
+ * Lazily fetches the host's local timezone once and caches it.
+ * Timezone lives on the host (not the container) since the host is
+ * where the user's system clock runs. Falls back to UTC on failure.
+ */
 import { log } from "./log.js";
 import { HOST_URL } from "./config.js";
 

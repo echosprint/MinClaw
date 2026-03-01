@@ -1,3 +1,9 @@
+/*
+ * Gmail and Google Calendar tool handlers for the MCP server.
+ * Auth uses OAuth2 with a long-lived refresh token (no interactive login).
+ * makeRfc2822 builds a raw MIME message; encodeMessage URL-safe-base64s it
+ * for the Gmail API. Thread headers (In-Reply-To, References) keep replies grouped.
+ */
 import { google } from "googleapis";
 import { log } from "./log.js";
 
@@ -69,7 +75,9 @@ export function createGmailHandlers(clientId: string, clientSecret: string, refr
     references?: string;
   }): Promise<ToolResult> => {
     log.info(`draft_email to="${to}" subject="${subject}" reply=${!!in_reply_to}`);
-    const raw = encodeMessage(makeRfc2822({ to, subject, body, inReplyTo: in_reply_to, references }));
+    const raw = encodeMessage(
+      makeRfc2822({ to, subject, body, inReplyTo: in_reply_to, references }),
+    );
     const res = await gmail.users.drafts.create({
       userId: "me",
       requestBody: { message: { raw, ...(thread_id ? { threadId: thread_id } : {}) } },
@@ -95,7 +103,9 @@ export function createGmailHandlers(clientId: string, clientSecret: string, refr
     references?: string;
   }): Promise<ToolResult> => {
     log.info(`send_email to="${to}" subject="${subject}" reply=${!!in_reply_to}`);
-    const raw = encodeMessage(makeRfc2822({ to, subject, body, inReplyTo: in_reply_to, references }));
+    const raw = encodeMessage(
+      makeRfc2822({ to, subject, body, inReplyTo: in_reply_to, references }),
+    );
     const res = await gmail.users.messages.send({
       userId: "me",
       requestBody: { raw, ...(thread_id ? { threadId: thread_id } : {}) },
@@ -182,8 +192,14 @@ export function createGmailHandlers(clientId: string, clientSecret: string, refr
 
   const check_gmail_service = async (): Promise<ToolResult> => {
     log.info("check_gmail_service");
-    if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET || !process.env.GOOGLE_REFRESH_TOKEN) {
-      return ok("unavailable: Google credentials not configured (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET / GOOGLE_REFRESH_TOKEN missing)");
+    if (
+      !process.env.GOOGLE_CLIENT_ID ||
+      !process.env.GOOGLE_CLIENT_SECRET ||
+      !process.env.GOOGLE_REFRESH_TOKEN
+    ) {
+      return ok(
+        "unavailable: Google credentials not configured (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET / GOOGLE_REFRESH_TOKEN missing)",
+      );
     }
     try {
       const profile = await gmail.users.getProfile({ userId: "me" });

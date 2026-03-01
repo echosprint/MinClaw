@@ -1,3 +1,9 @@
+/*
+ * MCP tool handlers — each corresponds to a tool Claude can call.
+ * All handlers proxy to the host HTTP API, injecting chatId so the host
+ * knows which Telegram chat to act on. Tool results must be ToolResult
+ * (MCP text content); errors are returned as text, not thrown.
+ */
 import { log } from "./log.js";
 
 export interface ToolResult {
