@@ -189,6 +189,67 @@ WebSearch: "Sam Altman site:blog.samaltman.com 2026"
 
 ---
 
+### Big 7 company blogs
+
+When the user asks what a specific company has been publishing, fetch their blog directly.
+
+#### OpenAI
+
+```text
+WebFetch: https://openai.com/news
+Prompt: list the most recent posts with titles, dates, and one-line summaries
+```
+
+#### Anthropic
+
+```text
+WebFetch: https://www.anthropic.com/news
+Prompt: list the most recent posts with titles, dates, and one-line summaries
+```
+
+#### Google DeepMind
+
+```text
+WebFetch: https://deepmind.google/discover/blog/
+Prompt: list the most recent posts with titles, dates, and one-line summaries
+```
+
+#### Meta AI
+
+```text
+WebFetch: https://ai.meta.com/blog/
+Prompt: list the most recent posts with titles, dates, and one-line summaries
+```
+
+#### Microsoft AI
+
+```text
+WebFetch: https://blogs.microsoft.com/ai/
+Prompt: list the most recent posts with titles, dates, and one-line summaries
+```
+
+#### NVIDIA
+
+```text
+WebFetch: https://nvidianews.nvidia.com/
+Prompt: list the most recent news items with titles and dates
+```
+
+#### xAI
+
+```text
+WebFetch: https://x.ai/news
+Prompt: list the most recent posts with titles, dates, and one-line summaries
+```
+
+Fallback for any company if direct fetch fails:
+
+```text
+WebSearch: "[Company] AI announcement OR blog post 2026"
+```
+
+---
+
 ### Combined AI roundup
 
 When the user wants a broad "AI news" summary, run these in sequence (max 4 fetches):
@@ -220,7 +281,25 @@ When the user wants a broad "AI news" summary, run these in sequence (max 4 fetc
    WebSearch: "LeCun OR Bengio OR 'Fei-Fei Li' OR 'Sam Altman' AI 2026"
    ```
 
-Synthesize into a single message with sections: **Top HN Stories**, **From the Field** (researchers), **Recent Essays**.
+5. **Big 7 company news** — one search covering the major AI/tech companies:
+
+   ```text
+   WebSearch: "OpenAI OR Anthropic OR Google DeepMind OR Meta AI OR Microsoft OR NVIDIA OR xAI news 2026"
+   ```
+
+   For a specific company's latest announcements, fetch their blog directly:
+
+   | Company | Blog URL |
+   | ------- | -------- |
+   | OpenAI | [openai.com/news](https://openai.com/news) |
+   | Anthropic | [anthropic.com/news](https://www.anthropic.com/news) |
+   | Google DeepMind | [deepmind.google/discover/blog](https://deepmind.google/discover/blog/) |
+   | Meta AI | [ai.meta.com/blog](https://ai.meta.com/blog/) |
+   | Microsoft AI | [blogs.microsoft.com/ai](https://blogs.microsoft.com/ai/) |
+   | NVIDIA | [nvidianews.nvidia.com](https://nvidianews.nvidia.com/) |
+   | xAI | [x.ai/news](https://x.ai/news) |
+
+Synthesize into a single message with sections: **Top HN Stories**, **From the Field** (researchers), **Company News**, **Recent Essays**.
 
 ---
 
@@ -233,10 +312,16 @@ Keep it scannable:
 1. [Title](url) — X points, Y comments
 2. ...
 
-**AI Roundup**
+**From the Field**
 - **Karpathy**: ...
 - **LeCun**: ...
+- **Bengio**: ...
+
+**Company News**
+- **OpenAI**: ...
 - **Anthropic**: ...
+- **Google DeepMind**: ...
+- **NVIDIA**: ...
 
 **What to read**: [best link](url)
 ```
@@ -246,4 +331,5 @@ Keep it scannable:
 - HN Algolia API is fast and reliable — prefer it over scraping ycombinator.com
 - For Twitter/X content, `WebFetch` on individual tweet URLs often fails; use `WebSearch` instead and summarize what comes up
 - If a source returns no useful results, skip it silently and note it in `<internal>` tags — don't report failures to the user unless all sources fail
-- Don't make more than 3–4 fetches per news request; summarize what you have
+- For a full roundup, up to 5–6 fetches/searches is acceptable; for a quick update, keep it to 3
+- When asked about a specific company, fetch their blog URL directly rather than searching
