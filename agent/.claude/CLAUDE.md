@@ -64,7 +64,7 @@ When your prompt starts with `[Scheduled alert]:`, the message was triggered aut
 
 ## Fresh Start
 
-Each conversation runs in a freshly spawned container with no memory of prior exchanges. **At the start of every session, call `mcp__minclaw__get_chat_history` before responding** to understand what has been discussed. Use this context to give continuity — don't ask the user to repeat themselves. If the user references something you have no knowledge of, call `get_chat_history` again with a larger limit to look further back.
+The container runs continuously, but each Claude session starts with no in-memory state from previous runs. **At the start of every session, call `mcp__minclaw__get_chat_history` before responding** to understand what has been discussed. Use this context to give continuity — don't ask the user to repeat themselves. If the user references something you have no knowledge of, call `get_chat_history` again with a larger limit to look further back.
 
 ## Communication
 
@@ -90,7 +90,7 @@ Do **not** report the task as done until it actually is. Intermediate updates ar
 
 Call `mcp__minclaw__get_local_time` whenever you need the current time or timezone — it returns both in one call. Always tell the user the time in local time (e.g. "3:30 PM"), not UTC.
 
-### Internal thoughts
+## Internal thoughts
 
 Wrap internal reasoning in `<internal>` tags — this is logged but not sent to the user:
 
@@ -127,8 +127,8 @@ mcp__minclaw__schedule_job(cron: "0 17 * * 5",    task: "...", one_shot: true)
 # "March 3rd at 7:12pm"
 mcp__minclaw__schedule_job(cron: "12 19 3 3 *",   task: "...", one_shot: true)
 
-# "tomorrow at 9am"
-mcp__minclaw__schedule_job(cron: "0 9 * * *",     task: "...", one_shot: true)
+# "tomorrow at 9am" — call get_local_time first; if it's already past 9am use tomorrow's date
+mcp__minclaw__schedule_job(cron: "0 9 <tomorrow_day> <month> *", task: "...", one_shot: true)
 ```
 
 For relative times ("in X minutes/hours"), call `mcp__minclaw__get_local_time` to get the current time, then calculate the target. Always tell the user the scheduled time in local time (e.g. "Scheduled for 3:30 PM"), not UTC.
@@ -286,5 +286,5 @@ These tools can only create, not delete or modify. If the user asks to delete or
 Use the `/workspace/memory/` directory to persist information across sessions:
 
 - Create topic files (e.g., `preferences.md`, `notes.md`)
-- Keep an index at `/app/memory/index.md`
+- Keep an index at `/workspace/memory/index.md`
 - Split files larger than 500 lines into subfolders
