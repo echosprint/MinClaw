@@ -26,7 +26,7 @@ If you want to understand how the loop works, start here.
 
 **AI-native.** No installation wizard beyond `/setup`. No debugging dashboard — describe the problem to Claude. No config files to manage — change behavior by modifying the code.
 
-**Secure by isolation.** The agent container has no Telegram credentials and only accesses two mounted paths: `data/memory/` and `log/`. It calls back to the host over HTTP. Bash commands run inside the container, not directly on your machine.
+**Secure by isolation.** The agent container has no Telegram credentials and only accesses one mounted path: `data/memory/`. It calls back to the host over HTTP. Bash commands run inside the container, not directly on your machine.
 
 ## What It Can Do
 
@@ -105,7 +105,7 @@ Claude can read the entire codebase in one context window and implement changes 
 | Host       | Node.js 22+, TypeScript                   |
 | Bot        | [Grammy](https://grammy.dev) (Telegram)   |
 | Database   | SQLite via better-sqlite3                 |
-| Agent      | Docker, Claude Agent SDK (`@query` loop)  |
+| Agent      | Docker, Claude Agent SDK (`query()` loop) |
 | Tools      | MCP server + agent-browser (Chromium)     |
 | Tests      | Vitest, dependency injection              |
 
@@ -143,7 +143,7 @@ Telegram ──► Host (Node.js / macOS or Linux)
                         ▼
 
               Agent (Docker container / port 14827)
-               ├─ Claude SDK       — @query tool-use loop
+               ├─ Claude SDK       — query() tool-use loop
                ├─ MCP server       — send_message, schedule_job, list_tasks, cancel_task
                ├─ Gmail MCP        — draft/send email, summarize inbox, add calendar events
                ├─ Skills           — github (gh CLI), weather, agent-browser
