@@ -102,7 +102,7 @@ Claude can read the entire codebase in one context window and implement changes 
 
 | Layer      | Technology                                |
 |------------|-------------------------------------------|
-| Host       | Node.js 20+, TypeScript                   |
+| Host       | Node.js 22+, TypeScript                   |
 | Bot        | [Grammy](https://grammy.dev) (Telegram)   |
 | Database   | SQLite via better-sqlite3                 |
 | Agent      | Docker, Claude Agent SDK (`@query` loop)  |
