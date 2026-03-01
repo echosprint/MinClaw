@@ -20,7 +20,7 @@ If you want to understand how the loop works, start here.
 
 ## Philosophy
 
-**Small enough to read.** ~1600 lines of TypeScript, two processes, 14 files. A complete personal assistant you can read in an afternoon and fully understand.
+**Small enough to read.** ~1600 lines of source TypeScript (+ ~1000 tests), two processes, 19 files. A complete personal assistant you can read in an afternoon and fully understand.
 
 **Easy to audit.** No transitive magic, no hidden middleware. Every request follows a straight line from Telegram message to Claude response. You can trace the full path in minutes.
 
@@ -39,6 +39,13 @@ If you want to understand how the loop works, start here.
 - **GitHub** — check PR status and CI, create and comment on issues, view workflow run logs, query the API
 - **Code & repo work** — clone a repo, analyze architecture, make changes, open PRs via `gh`
 - **Persistent memory** — agent workspace survives container restarts at `data/memory/`
+
+## Requirements
+
+- macOS or Linux
+- Node.js 20+
+- [Claude Code](https://claude.ai/code)
+- [Docker](https://www.docker.com) (macOS/Linux)
 
 ## Quick Start
 
@@ -108,7 +115,7 @@ Claude can read the entire codebase in one context window and implement changes 
 
 ## Scheduling
 
-Ask MinClaw from your Telegram to schedule tasks in plain language — it converts them to cron expressions and stores them in SQLite. The scheduler checks for due jobs every 60 seconds.
+Ask MinClaw from your Telegram to schedule tasks in plain language — it converts them to cron expressions and stores them in SQLite. The scheduler checks for due jobs every 10 seconds.
 
 ```text
 Remind me to drink water every hour
@@ -132,7 +139,7 @@ Telegram ──► Host (Node.js / macOS or Linux)
                ├─ HTTP server      — receives callbacks from agent
                └─ Job scheduler    — polls for due jobs every 60 s
 
-                        │  POST /run
+                        │  POST /enqueue
                         ▼
 
               Agent (Docker container / port 14827)
@@ -159,16 +166,21 @@ MinClaw/
 │   ├── scheduler.ts    — cron job runner
 │   ├── db.ts           — SQLite: messages + jobs tables
 │   ├── agent.ts        — HTTP client to agent container
-│   └── markdown.ts     — Markdown → Telegram HTML
+│   ├── markdown.ts     — Markdown → Telegram HTML
+│   └── log.ts          — colorized stdout + file logger
 │
 ├── agent/src/
 │   ├── index.ts           — entry point
 │   ├── runner.ts          — Claude @query tool-use loop
-│   ├── server.ts          — HTTP server (/health, /run)
+│   ├── server.ts          — HTTP server (/health, /enqueue)
+│   ├── stream.ts          — async FIFO queue (serialises agent runs)
 │   ├── mcp-server.ts      — MCP tool definitions (Telegram + scheduler)
 │   ├── mcp-handlers.ts    — MCP tool implementations
 │   ├── gmail-mcp-server.ts — Gmail + Calendar MCP tools
-│   └── gmail-handlers.ts  — Gmail + Calendar implementations
+│   ├── gmail-handlers.ts  — Gmail + Calendar implementations
+│   ├── config.ts          — shared constants (HOST_URL, MCP paths)
+│   ├── tz.ts              — fetches host timezone, caches for agent lifetime
+│   └── log.ts             — agent logger
 │
 ├── agent/Dockerfile        — production image
 ├── agent/Dockerfile.base   — base image (Node + Chromium + Claude Code)
@@ -183,7 +195,7 @@ MinClaw/
 
 **Sequential agent runs.** Messages are queued and processed one at a time. Only one Claude session is active at any moment. This keeps the system simple and avoids race conditions on shared state (history, jobs). A message sent while the agent is busy waits in the queue.
 
-**Fire-and-forget from host to agent.** The host POSTs to `/run` and immediately gets a `202` — it does not wait for Claude to finish. The agent replies asynchronously via `POST /send` back to the host. This keeps the host responsive and decouples Telegram's webhook timeout from Claude's processing time.
+**Fire-and-forget from host to agent.** The host POSTs to `/enqueue` and immediately gets a `202` — it does not wait for Claude to finish. The agent replies asynchronously via `POST /send` back to the host. This keeps the host responsive and decouples Telegram's webhook timeout from Claude's processing time.
 
 **MCP server spawned fresh per run.** Each agent run starts a new MCP subprocess with `CHAT_ID` injected via environment variable. There is no persistent MCP daemon. This keeps the MCP server stateless and scoped to exactly one conversation.
 
@@ -191,17 +203,35 @@ MinClaw/
 
 **Text messages only.** Photos, stickers, voice messages, and other media types are silently ignored. The agent receives plain text and responds in Markdown.
 
+**Agent runs in Docker, not on the host machine.** This is a deliberate security trade-off. The agent has access to powerful tools — it can run arbitrary Bash commands, read and write files, and modify environment variables. Running it directly on the host (as OpenClaw does) means those capabilities apply to your actual machine: your SSH keys, your dotfiles, your credentials. A sufficiently clever prompt injection in a fetched web page or email could do real damage. Docker doesn't make the agent safe, but it contains the blast radius. Bash commands run inside the container, not on your machine. The worst case is a corrupted container, not a compromised host. Security matters more here than the convenience of direct host access.
+
 ## How It Works
 
 When you send a message:
 
 1. Grammy bot receives it and saves it to SQLite
-2. Host POSTs a `RunPayload` (message + history) to the agent at `POST /run`
+2. Host POSTs a `RunPayload` (message + history) to the agent at `POST /enqueue`
 3. Agent runs a Claude tool-use loop with all tools available
 4. Claude calls `send_message` (MCP tool) to reply
 5. Host receives the callback at `POST /send` and delivers it via Grammy
 
 Scheduled jobs follow the same path — the scheduler POSTs the job's task to the agent as a user message, and the agent handles it like any other conversation turn.
+
+## Contributing
+
+MinClaw only supports Telegram and has no plans to add other messaging platforms. The host is intentionally minimal — one bot, one database, one scheduler.
+
+**Don't add platforms. Add skills.**
+
+If you want to extend what the agent can do, contribute a skill file under `agent/.claude/skills/`. A skill is a Markdown file that teaches Claude Code how to wire up a new capability — a new MCP tool, a new API integration, a new workflow.
+
+```text
+agent/.claude/skills/
+└── your-skill-name/
+    └── SKILL.md    — instructions Claude Code follows to add the capability
+```
+
+The agent picks up skills automatically — no manual invocation needed.
 
 ## License
 
