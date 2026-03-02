@@ -1,7 +1,15 @@
-import { describe, test, expect, beforeAll, vi } from "vitest";
+import fs from "fs";
+import path from "path";
+import { describe, test, expect, beforeAll, afterAll, vi } from "vitest";
 import * as db from "../src/db";
 import { createBot } from "../src/bot";
 import type { RunPayload } from "../src/agent";
+
+const TEST_USER_ID = 99;
+
+const ALLOWLIST_PATH = path.resolve(__dirname, "../../TELEGRAM_ALLOWED_IDS");
+beforeAll(() => fs.writeFileSync(ALLOWLIST_PATH, String(TEST_USER_ID)));
+afterAll(() => fs.rmSync(ALLOWLIST_PATH, { force: true }));
 
 const TEST_BOT_INFO = {
   id: 1,
@@ -52,7 +60,7 @@ function makeUpdate(chatId: number, text: string, updateId = 1) {
     message: {
       message_id: updateId,
       chat: { id: chatId, type: "private" as const, first_name: "User" },
-      from: { id: 99, is_bot: false as const, first_name: "User" },
+      from: { id: TEST_USER_ID, is_bot: false as const, first_name: "User" },
       text,
       date: Math.floor(Date.now() / 1000),
       entities: text.startsWith("/")
@@ -106,7 +114,7 @@ describe("bot: commands", () => {
 
   test("/ping sends the exact ping message text to runAgent", async () => {
     vi.useFakeTimers();
-    const runAgent = vi.fn(async () => {});
+    const runAgent = vi.fn(async (_: RunPayload) => {});
     const { bot } = makeBotWithMockedApi({ runAgent });
 
     const p = bot.handleUpdate(makeUpdate(111, "/ping", 20));
@@ -137,7 +145,7 @@ describe("bot: commands", () => {
     db.saveMessage("115", "user", "prior message");
     db.saveMessage("115", "assistant", "prior response");
 
-    const runAgent = vi.fn(async () => {});
+    const runAgent = vi.fn(async (_: RunPayload) => {});
     const { bot } = makeBotWithMockedApi({ runAgent });
 
     const p = bot.handleUpdate(makeUpdate(115, "/ping", 24));

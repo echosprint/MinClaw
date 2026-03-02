@@ -3,12 +3,31 @@
  * to the agent. Commands: /start, /chatid, /ping (agent health check),
  * /clear (wipe history + restart agent container).
  */
+import fs from "fs";
+import path from "path";
 import { Bot, type Context } from "grammy";
 import type { UserFromGetMe } from "@grammyjs/types";
 import { HttpsProxyAgent } from "https-proxy-agent";
 import type { RunPayload } from "./agent";
 import type { Message } from "./db";
 import { log } from "./log";
+
+function readAllowlist(): string[] {
+  try {
+    const ids = fs
+      .readFileSync(path.resolve(__dirname, "../../TELEGRAM_ALLOWED_IDS"), "utf8")
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+    if (ids.length === 0) {
+      log.error("TELEGRAM_ALLOWED_IDS is empty — no user can use the bot");
+    }
+    return ids;
+  } catch {
+    log.error("TELEGRAM_ALLOWED_IDS not found — no user can use the bot");
+    return [];
+  }
+}
 
 export interface BotDeps {
   saveMessage: (chatId: string, role: "user" | "assistant", content: string) => void;
@@ -28,6 +47,23 @@ export function createBot(token: string, deps: BotDeps, botInfo?: UserFromGetMe)
     ? { client: { baseFetchConfig: { agent: new HttpsProxyAgent(proxy) } } }
     : {};
   const bot = new Bot(token, { ...botConfig, ...(botInfo ? { botInfo } : {}) });
+
+  const allowedIds: string[] = readAllowlist();
+
+  // Allowlist gate: only explicitly listed user IDs may interact with the bot.
+  // Messages from unlisted users are dropped and logged (userId + message text).
+  bot.use(async (ctx, next) => {
+    const userId = ctx.from?.id;
+    if (userId !== undefined && allowedIds.includes(String(userId))) {
+      await next();
+    } else {
+      const from = ctx.from;
+      const name = [from?.first_name, from?.last_name].filter(Boolean).join(" ");
+      const username = from?.username ? `@${from.username}` : "(no username)";
+      const text = ctx.message?.text ?? ctx.callbackQuery?.data ?? "(no text)";
+      log.info(`bot blocked  userId=${userId ?? "unknown"} name="${name}" username=${username} text="${text.slice(0, 80)}"`);
+    }
+  });
 
   COMMANDS.start = async (ctx) => {
     await ctx.reply(

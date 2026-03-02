@@ -6,3 +6,4 @@ dist/
 /host/data/
 /data/
 client_secret*.json
+TELEGRAM_ALLOWED_IDS

@@ -30,6 +30,7 @@ Before running any steps, do a quick state check so you only redo what's actuall
 node --version 2>/dev/null || echo "NODE_MISSING"
 pnpm --version 2>/dev/null || echo "PNPM_MISSING"
 test -f .env && echo "ENV_EXISTS" || echo "ENV_MISSING"
+test -f TELEGRAM_ALLOWED_IDS && (grep -qP '\S' TELEGRAM_ALLOWED_IDS && echo "ALLOWLIST_OK" || echo "ALLOWLIST_EMPTY") || echo "ALLOWLIST_MISSING"
 docker info > /dev/null 2>&1 && echo "DOCKER_RUNNING" || echo "DOCKER_DOWN"
 docker image inspect minclaw-agent-base:latest > /dev/null 2>&1 && echo "BASE_EXISTS" || echo "BASE_MISSING"
 docker image inspect minclaw-agent:latest > /dev/null 2>&1 && echo "AGENT_EXISTS" || echo "AGENT_MISSING"
@@ -233,7 +234,21 @@ If not set, GitHub tools silently fail but the rest of MinClaw works normally.
 
 ---
 
-### 2f. Optional Proxy
+### 2f. Allowlist — Who Can Use the Bot
+
+The bot only responds to Telegram user IDs listed in `TELEGRAM_ALLOWED_IDS` (one ID per line, repo root). If the file is missing or empty, **nobody can use the bot** — the host logs an error at startup.
+
+Create the file now with a placeholder and fill it in after the first message is sent (see Troubleshooting — the blocked message log shows the exact user ID to add):
+
+```bash
+touch TELEGRAM_ALLOWED_IDS
+```
+
+The file is gitignored — it will never be committed.
+
+---
+
+### 2g. Optional Proxy
 
 `AskUserQuestion: Do you use an HTTP proxy? (e.g. Clash, Surge)`
 
@@ -444,20 +459,4 @@ rm -rf data/memory/*
 
 ## Troubleshooting
 
-**Bot token rejected:** Validate with `curl -s "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getMe"`. Must return `"ok":true`. If not, re-check the token in `.env` — no extra spaces or newlines.
-
-**Bot doesn't respond to messages:** Check host logs for `[bot] polling started`. Ensure no other process is polling the same token (e.g. another MinClaw instance). Only one process can poll a bot token at a time.
-
-**Bot responds in DMs but not in groups:** Group Privacy is enabled. Fix: `@BotFather` → `/mybots` → select bot → **Bot Settings** → **Group Privacy** → **Turn off**, then remove and re-add the bot to the group.
-
-**Agent not replying (bot receives but agent is silent):** Check `docker ps` — container must be running. Check `log/minclaw.log` for errors. Verify `CLAUDE_CODE_OAUTH_TOKEN` or `ANTHROPIC_API_KEY` is valid in `.env`. Check that `AGENT_URL=http://localhost:14827` is set in `.env` (the code defaults to this value, but setting it explicitly makes it clear).
-
-**"Claude Code process exited with code 1":** The Claude credential in `.env` is invalid or expired. Re-run Phase 2c.
-
-**Container can't reach host (`host.docker.internal` fails on Linux):** The `docker-compose.yml` includes `extra_hosts: host.docker.internal:host-gateway` — this requires Docker 20.10+. Check `docker --version`.
-
-**SQLite error on startup:** Delete `data/db/minclaw.db` and restart — the schema is auto-created by `db.init()` on next start.
-
-**Proxy issues:** If builds hang, ensure both `HTTPS_PROXY` and `DOCKER_BUILD_PROXY` are set in `.env`. The host process picks up `HTTPS_PROXY` automatically; Docker builds need `--build-arg`.
-
-**Gmail/Calendar tools not working:** Check that `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `GOOGLE_REFRESH_TOKEN` are all set in `.env`. Verify the OAuth consent screen has the correct scopes (`gmail.compose`, `gmail.readonly`, `calendar.events`) and your Google account is listed as a test user. Re-run Phase 2d to regenerate the refresh token if it has been revoked.
+If anything isn't working after setup, use the `/debug` skill — it covers all common issues with step-by-step diagnostics.

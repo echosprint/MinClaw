@@ -91,6 +91,35 @@ tail -5 log/minclaw.log 2>/dev/null || echo "(no agent log yet)"
 
 ## Common Issues
 
+### 0. Bot receives messages but ignores them (allowlist)
+
+The bot silently drops messages from users not listed in `TELEGRAM_ALLOWED_IDS`. Each blocked message is logged:
+
+```bash
+grep "bot blocked" log/minclaw.log | tail -20
+```
+
+Example log line:
+
+```text
+bot blocked  userId=123456789 name="John Doe" username=@johndoe text="hello"
+```
+
+The `userId` field is exactly what goes in `TELEGRAM_ALLOWED_IDS`. To allow a user:
+
+```bash
+echo "123456789" >> TELEGRAM_ALLOWED_IDS
+pnpm stop && pnpm start
+```
+
+If the file is missing entirely, create it:
+
+```bash
+touch TELEGRAM_ALLOWED_IDS
+```
+
+---
+
 ### 1. Bot receives messages but agent never replies
 
 The agent container is the most likely culprit.
@@ -292,7 +321,49 @@ curl -x "${HTTPS_PROXY}" -s -o /dev/null -w "HTTP %{http_code}\n" --max-time 5 h
 
 ---
 
-### 7. Scheduler jobs not firing
+### 7. Bot token rejected
+
+```bash
+curl -s "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getMe"
+```
+
+Must return `"ok":true`. If not, re-check `TELEGRAM_BOT_TOKEN` in `.env` — no extra spaces or newlines. Re-run setup Phase 2a to get a new token.
+
+---
+
+### 8. Bot responds in DMs but not in groups
+
+Group Privacy is enabled — the bot only sees @mentions and commands in groups. Fix:
+
+`@BotFather` → `/mybots` → select bot → **Bot Settings** → **Group Privacy** → **Turn off**
+
+Then remove and re-add the bot to the group.
+
+---
+
+### 9. SQLite error on startup
+
+```bash
+rm -f data/db/minclaw.db && pnpm start
+```
+
+The schema is auto-created by `db.init()` on next start. No data loss beyond message history.
+
+---
+
+### 10. Gmail / Calendar tools not working
+
+Check all three credentials are set in `.env`:
+
+```bash
+grep -E "GOOGLE_CLIENT_ID|GOOGLE_CLIENT_SECRET|GOOGLE_REFRESH_TOKEN" .env
+```
+
+If any are missing or the token is revoked, re-run setup Phase 2d. Also verify the OAuth consent screen has the correct scopes (`gmail.compose`, `gmail.readonly`, `calendar.events`) and your Google account is listed as a test user.
+
+---
+
+### 11. Scheduler jobs not firing
 
 Jobs are stored in `data/db/minclaw.db` and run by the host scheduler.
 
