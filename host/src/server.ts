@@ -137,6 +137,7 @@ export function createServer(deps: ServerDeps, port: number): http.Server {
     }
   });
 
-  server.listen(port);
+  // Localhost only — no auth on these endpoints, so don't expose to LAN.
+  server.listen(port, "127.0.0.1");
   return server;
 }

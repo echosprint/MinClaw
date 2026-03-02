@@ -2,7 +2,7 @@ services:
   agent:
     image: minclaw-agent:latest
     ports:
-      - "14827:14827"
+      - "127.0.0.1:14827:14827"
     environment:
       - CLAUDE_CODE_OAUTH_TOKEN=${CLAUDE_CODE_OAUTH_TOKEN}
       - HOST_URL=http://host.docker.internal:13821

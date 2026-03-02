@@ -69,6 +69,9 @@ export function createServer(deps: AgentServerDeps, port: number): http.Server {
     }
   });
 
+  // Must bind 0.0.0.0 inside the container — 127.0.0.1 would block
+  // Docker port forwarding from the host. Access is restricted via
+  // docker-compose.yml (127.0.0.1:14827:14827) instead.
   server.listen(port);
   return server;
 }
