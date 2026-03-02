@@ -118,6 +118,19 @@ If the file is missing entirely, create it:
 touch TELEGRAM_ALLOWED_IDS
 ```
 
+**One user works but another doesn't?** This is an allowlist issue. Ask the other user to send a message to the bot, then check the logs for their blocked entry:
+
+```bash
+grep "bot blocked" log/minclaw.log | tail -5
+```
+
+Extract their `userId` from the log line, add it to the allowlist, and restart:
+
+```bash
+echo "<their-userId>" >> TELEGRAM_ALLOWED_IDS
+pnpm stop && pnpm start
+```
+
 ---
 
 ### 1. Bot receives messages but agent never replies
