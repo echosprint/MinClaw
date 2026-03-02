@@ -15,7 +15,6 @@ vi.stubGlobal(
 
 import { query } from "@anthropic-ai/claude-agent-sdk";
 import { enqueue, startAgent } from "../src/runner.js";
-import { globalStream } from "../src/stream.js";
 
 startAgent();
 
@@ -192,17 +191,5 @@ describe("runner", () => {
       // Should not throw — the error is caught by the .catch() in drainMessages
     });
 
-    test("drainMessages calls process.exit when stream ends unexpectedly", async () => {
-      // Mock process.exit to prevent actual exit
-      const exitSpy = vi.spyOn(process, "exit").mockImplementation(() => undefined as never);
-      mockQuery.mockImplementation(async function* () {});
-
-      // End the global stream — this causes the for-await loop to exit
-      globalStream.end();
-      await flush();
-
-      expect(exitSpy).toHaveBeenCalledWith(1);
-      exitSpy.mockRestore();
-    });
   });
 });

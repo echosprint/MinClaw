@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { describe, test, expect, beforeAll, vi } from "vitest";
+import { describe, test, expect, beforeAll, afterEach, vi } from "vitest";
 import * as db from "../src/db";
 import { createBot } from "../src/bot";
 import type { RunPayload } from "../src/agent";
@@ -276,6 +276,7 @@ describe("bot: allowlist", () => {
       message: {
         message_id: 61,
         chat: { id: 888, type: "private" as const, first_name: "Anon" },
+        from: undefined as any,
         text: "no from field",
         date: Math.floor(Date.now() / 1000),
       },
@@ -343,15 +344,23 @@ describe("bot: known command via text handler", () => {
 });
 
 describe("bot: allowlist file error handling", () => {
-  test("handles missing allowlist file gracefully", () => {
-    // Temporarily make readFileSync throw for the allowlist path
-    const origImpl = (vi.mocked(fs.readFileSync) as ReturnType<typeof vi.fn>).getMockImplementation();
-    vi.mocked(fs.readFileSync).mockImplementation(((p: string, ...args: unknown[]) => {
-      if (path.resolve(p) === ALLOWLIST_PATH) throw new Error("ENOENT");
+  const mockReadFile = vi.mocked(fs.readFileSync);
+  const defaultImpl = mockReadFile.getMockImplementation()!;
+
+  afterEach(() => {
+    mockReadFile.mockImplementation(defaultImpl as typeof fs.readFileSync);
+  });
+
+  function stubAllowlist(fn: (p: string) => string) {
+    mockReadFile.mockImplementation(((p: string, ...args: unknown[]) => {
+      if (path.resolve(p) === ALLOWLIST_PATH) return fn(p);
       return (origReadFileSync as Function).call(fs, p, ...args);
     }) as typeof fs.readFileSync);
+  }
 
-    // Creating a bot with a missing file should not throw
+  test("handles missing allowlist file gracefully", () => {
+    stubAllowlist(() => { throw new Error("ENOENT"); });
+
     const bot = createBot(
       "fake-token",
       {
@@ -364,17 +373,10 @@ describe("bot: allowlist file error handling", () => {
       TEST_BOT_INFO,
     );
     expect(bot).toBeDefined();
-
-    // Restore
-    vi.mocked(fs.readFileSync).mockImplementation(origImpl!);
   });
 
   test("handles empty allowlist file", () => {
-    const origImpl = (vi.mocked(fs.readFileSync) as ReturnType<typeof vi.fn>).getMockImplementation();
-    vi.mocked(fs.readFileSync).mockImplementation(((p: string, ...args: unknown[]) => {
-      if (path.resolve(p) === ALLOWLIST_PATH) return "\n\n";
-      return (origReadFileSync as Function).call(fs, p, ...args);
-    }) as typeof fs.readFileSync);
+    stubAllowlist(() => "\n\n");
 
     const bot = createBot(
       "fake-token",
@@ -388,7 +390,5 @@ describe("bot: allowlist file error handling", () => {
       TEST_BOT_INFO,
     );
     expect(bot).toBeDefined();
-
-    vi.mocked(fs.readFileSync).mockImplementation(origImpl!);
   });
 });
