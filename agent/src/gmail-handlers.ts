@@ -193,9 +193,9 @@ export function createGmailHandlers(clientId: string, clientSecret: string, refr
   const check_gmail_service = async (): Promise<ToolResult> => {
     log.info("check_gmail_service");
     if (
-      !process.env.GOOGLE_CLIENT_ID ||
-      !process.env.GOOGLE_CLIENT_SECRET ||
-      !process.env.GOOGLE_REFRESH_TOKEN
+      !clientId ||
+      !clientSecret ||
+      !refreshToken
     ) {
       return ok(
         "unavailable: Google credentials not configured (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET / GOOGLE_REFRESH_TOKEN missing)",

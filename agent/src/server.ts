@@ -1,6 +1,7 @@
 import http from "http";
 import type { RunPayload } from "./runner.js";
 import { log } from "./log.js";
+import { secret } from "./config.js";
 
 export interface AgentServerDeps {
   enqueue: (payload: RunPayload) => void;
@@ -43,7 +44,7 @@ export function createServer(deps: AgentServerDeps, port: number): http.Server {
       if (route === "GET /health") {
         // CLAUDE_CODE_OAUTH_TOKEN must be set for the agent to authenticate with Claude.
         // The host checks this to detect misconfiguration early.
-        const claude = !!process.env.CLAUDE_CODE_OAUTH_TOKEN;
+        const claude = !!secret("CLAUDE_CODE_OAUTH_TOKEN");
         respond(res, 200, { ok: true, claude });
         return;
       }

@@ -4,14 +4,27 @@ services:
     ports:
       - "14827:14827"
     environment:
-      - CLAUDE_CODE_OAUTH_TOKEN=${CLAUDE_CODE_OAUTH_TOKEN}
       - HOST_URL=http://host.docker.internal:13821
       - AGENT_PORT=14827
-      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
-      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
-      - GOOGLE_REFRESH_TOKEN=${GOOGLE_REFRESH_TOKEN:-}
-      - GH_TOKEN=${GH_TOKEN:-}
+    secrets:
+      - CLAUDE_CODE_OAUTH_TOKEN
+      - GOOGLE_CLIENT_ID
+      - GOOGLE_CLIENT_SECRET
+      - GOOGLE_REFRESH_TOKEN
+      - GH_TOKEN
     volumes:
       - ./data/memory:/workspace/memory
     extra_hosts:
       - "host.docker.internal:host-gateway"
+
+secrets:
+  CLAUDE_CODE_OAUTH_TOKEN:
+    environment: CLAUDE_CODE_OAUTH_TOKEN
+  GOOGLE_CLIENT_ID:
+    environment: GOOGLE_CLIENT_ID
+  GOOGLE_CLIENT_SECRET:
+    environment: GOOGLE_CLIENT_SECRET
+  GOOGLE_REFRESH_TOKEN:
+    environment: GOOGLE_REFRESH_TOKEN
+  GH_TOKEN:
+    environment: GH_TOKEN

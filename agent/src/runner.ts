@@ -3,7 +3,7 @@ import path from "path";
 import { log } from "./log.js";
 import { globalStream } from "./stream.js";
 import { getTZ } from "./tz.js";
-import { HOST_URL, mcpServerPath, gmailMcpServerPath, claudeDir } from "./config.js";
+import { HOST_URL, mcpServerPath, gmailMcpServerPath, claudeDir, secret } from "./config.js";
 
 export interface Message {
   role: "user" | "assistant";
@@ -105,9 +105,9 @@ async function runQuery(payload: RunPayload): Promise<void> {
       command: "node",
       args: [gmailMcpServerPath],
       env: {
-        GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ?? "",
-        GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET ?? "",
-        GOOGLE_REFRESH_TOKEN: process.env.GOOGLE_REFRESH_TOKEN ?? "",
+        GOOGLE_CLIENT_ID: secret("GOOGLE_CLIENT_ID"),
+        GOOGLE_CLIENT_SECRET: secret("GOOGLE_CLIENT_SECRET"),
+        GOOGLE_REFRESH_TOKEN: secret("GOOGLE_REFRESH_TOKEN"),
       },
     },
   };
