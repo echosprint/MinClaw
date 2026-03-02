@@ -201,6 +201,8 @@ MinClaw/
 
 **Agent has no Telegram credentials.** The agent container cannot send messages directly to Telegram — it must call `send_message` (MCP tool) → host `/send` → Grammy. This means all outbound delivery is auditable through one path and the agent cannot act outside the host's control.
 
+**Allowlist-based access control.** The bot only responds to Telegram user IDs listed in the `TELEGRAM_ALLOWED_IDS` file (one ID per line). Messages from unlisted users are silently dropped and logged with their user ID, name, and username. During `/setup`, the allowlist starts empty — you send a test message, Claude reads the blocked log entry, extracts your ID, and adds it automatically. To grant access to another person, have them message the bot, then check the log or run `/setup` again.
+
 **Text messages only.** Photos, stickers, voice messages, and other media types are silently ignored. The agent receives plain text and responds in Markdown.
 
 **Agent runs in Docker, not on the host machine.** This is a deliberate security trade-off. The agent has access to powerful tools — it can run arbitrary Bash commands, read and write files, and modify environment variables. Running it directly on the host (as OpenClaw does) means those capabilities apply to your actual machine: your SSH keys, your dotfiles, your credentials. A sufficiently clever prompt injection in a fetched web page or email could do real damage. Docker doesn't make the agent safe, but it contains the blast radius. Bash commands run inside the container, not on your machine. The worst case is a corrupted container, not a compromised host. Security matters more here than the convenience of direct host access.
