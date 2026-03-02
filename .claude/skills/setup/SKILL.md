@@ -234,21 +234,7 @@ If not set, GitHub tools silently fail but the rest of MinClaw works normally.
 
 ---
 
-### 2f. Allowlist — Who Can Use the Bot
-
-The bot only responds to Telegram user IDs listed in `TELEGRAM_ALLOWED_IDS` (one ID per line, repo root). If the file is missing or empty, **nobody can use the bot** — the host logs an error at startup.
-
-Create the file now with a placeholder and fill it in after the first message is sent (see Troubleshooting — the blocked message log shows the exact user ID to add):
-
-```bash
-touch TELEGRAM_ALLOWED_IDS
-```
-
-The file is gitignored — it will never be committed.
-
----
-
-### 2g. Optional Proxy
+### 2f. Optional Proxy
 
 `AskUserQuestion: Do you use an HTTP proxy? (e.g. Clash, Surge)`
 
@@ -386,19 +372,15 @@ tail -n 30 log/minclaw.log 2>/dev/null || echo "(no agent log yet)"
 
 Tell the user:
 
-> **Test it now:**
->
-> 1. Open Telegram and search for your bot by username
-> 2. Press **Start** (if first time)
-> 3. Send any message — Andy should reply within a few seconds
->
-> If it works, setup is complete. Watch live logs with:
->
-> ```bash
-> tail -f log/minclaw.log
-> ```
+> **Test it now:** Send any message to your bot in Telegram, then come back here and tell me when you've done it.
 
-If the bot does not respond within 10 seconds, check logs before concluding success.
+When the user confirms, wait a few seconds then check the host logs (via `TaskOutput` on the running host process, or `tail log/minclaw.log`).
+
+- If the log shows a `bot blocked  userId=<id>` line (which also contains `name=` and `username=`): extract the user ID, add it to `TELEGRAM_ALLOWED_IDS`, and restart the host. Then tell the user: "I've added your Telegram account @username (ID: 123456) to the allowlist and restarted the host. You should have access now — send another message to your bot to confirm it works." Use the actual name/username from the log so the user recognizes themselves.
+- If the log shows the message was forwarded to the agent and a reply was sent: setup is complete.
+- If something else went wrong: diagnose from the logs.
+
+Do NOT ask the user to manually check logs or find their user ID — Claude handles this automatically.
 
 ---
 
