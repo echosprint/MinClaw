@@ -7,13 +7,12 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import { createGmailHandlers } from "./gmail-handlers.js";
-import { secret } from "./config.js";
 
 const server = new McpServer({ name: "gmail", version: "1.0.0" });
 const handlers = createGmailHandlers(
-  secret("GOOGLE_CLIENT_ID"),
-  secret("GOOGLE_CLIENT_SECRET"),
-  secret("GOOGLE_REFRESH_TOKEN"),
+  process.env.GOOGLE_CLIENT_ID ?? "",
+  process.env.GOOGLE_CLIENT_SECRET ?? "",
+  process.env.GOOGLE_REFRESH_TOKEN ?? "",
 );
 
 server.registerTool(
