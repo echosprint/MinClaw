@@ -1,15 +1,19 @@
 import fs from "fs";
 import path from "path";
-import { describe, test, expect, beforeAll, afterAll, vi } from "vitest";
+import { describe, test, expect, beforeAll, vi } from "vitest";
 import * as db from "../src/db";
 import { createBot } from "../src/bot";
 import type { RunPayload } from "../src/agent";
 
 const TEST_USER_ID = 99;
 
+// Mock the allowlist file so tests never touch the real TELEGRAM_ALLOWED_IDS
 const ALLOWLIST_PATH = path.resolve(__dirname, "../../TELEGRAM_ALLOWED_IDS");
-beforeAll(() => fs.writeFileSync(ALLOWLIST_PATH, String(TEST_USER_ID)));
-afterAll(() => fs.rmSync(ALLOWLIST_PATH, { force: true }));
+const origReadFileSync = fs.readFileSync;
+vi.spyOn(fs, "readFileSync").mockImplementation(((p: string, ...args: unknown[]) => {
+  if (path.resolve(p) === ALLOWLIST_PATH) return String(TEST_USER_ID);
+  return (origReadFileSync as Function).call(fs, p, ...args);
+}) as typeof fs.readFileSync);
 
 const TEST_BOT_INFO = {
   id: 1,
