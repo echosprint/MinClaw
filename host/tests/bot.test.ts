@@ -231,4 +231,164 @@ describe("bot: commands", () => {
     expect(clearHistory).toHaveBeenCalled();
     expect(replies.some((r) => r.includes("Agent restart failed"))).toBe(true);
   });
+
+  test("/start replies with greeting", async () => {
+    const { bot, replies } = makeBotWithMockedApi();
+    await bot.handleUpdate(makeUpdate(333, "/start", 40));
+    expect(replies.some((r) => r.includes("MinClaw"))).toBe(true);
+  });
+
+  test("unknown command replies with error message", async () => {
+    const { bot, replies, runAgent } = makeBotWithMockedApi();
+    await bot.handleUpdate(makeUpdate(444, "/foobar", 50));
+    expect(replies.some((r) => r.includes("Unknown command /foobar"))).toBe(true);
+    expect(runAgent).not.toHaveBeenCalled();
+  });
+});
+
+describe("bot: allowlist", () => {
+  beforeAll(() => {
+    db.init(":memory:");
+  });
+
+  test("blocks messages from users not in allowlist", async () => {
+    const { bot, replies, runAgent } = makeBotWithMockedApi();
+    // Use a user ID NOT in the allowlist (TEST_USER_ID=99 is allowed)
+    const update = {
+      update_id: 60,
+      message: {
+        message_id: 60,
+        chat: { id: 888, type: "private" as const, first_name: "Hacker" },
+        from: { id: 777, is_bot: false as const, first_name: "Hacker", username: "hacker" },
+        text: "should be blocked",
+        date: Math.floor(Date.now() / 1000),
+      },
+    };
+    await bot.handleUpdate(update);
+    expect(replies).toHaveLength(0);
+    expect(runAgent).not.toHaveBeenCalled();
+  });
+
+  test("blocks message when from field is missing (userId undefined)", async () => {
+    const { bot, replies } = makeBotWithMockedApi();
+    const update = {
+      update_id: 61,
+      message: {
+        message_id: 61,
+        chat: { id: 888, type: "private" as const, first_name: "Anon" },
+        text: "no from field",
+        date: Math.floor(Date.now() / 1000),
+      },
+    };
+    await bot.handleUpdate(update);
+    expect(replies).toHaveLength(0);
+  });
+});
+
+describe("bot: proxy config", () => {
+  test("creates bot with HTTPS_PROXY when env var is set", () => {
+    process.env.HTTPS_PROXY = "http://proxy:8080";
+    const bot = createBot(
+      "fake-token",
+      {
+        saveMessage: vi.fn(),
+        getHistory: vi.fn(() => []),
+        dispatch: vi.fn(async () => {}),
+        clearHistory: vi.fn(),
+        restartAgent: vi.fn(async () => {}),
+      },
+      TEST_BOT_INFO,
+    );
+    expect(bot).toBeDefined();
+    delete process.env.HTTPS_PROXY;
+  });
+});
+
+describe("bot: allowlist callback query", () => {
+  beforeAll(() => {
+    db.init(":memory:");
+  });
+
+  test("blocked user with callback query data is logged", async () => {
+    const { bot, replies } = makeBotWithMockedApi();
+    const update = {
+      update_id: 70,
+      callback_query: {
+        id: "cb1",
+        chat_instance: "ci1",
+        from: { id: 666, is_bot: false as const, first_name: "Blocked" },
+        data: "some_callback",
+      },
+    };
+    await bot.handleUpdate(update);
+    expect(replies).toHaveLength(0);
+  });
+});
+
+describe("bot: known command via text handler", () => {
+  beforeAll(() => {
+    db.init(":memory:");
+  });
+
+  test("known command in text handler does not generate unknown cmd reply", async () => {
+    const { bot, replies, runAgent } = makeBotWithMockedApi();
+    // /start is a known command — the text handler should return early
+    // This is handled by the command handler, not the text handler.
+    // The text handler's startsWith("/") branch catches unregistered commands only.
+    await bot.handleUpdate(makeUpdate(555, "/start", 80));
+    // /start is registered as a command handler, so text handler won't see it
+    expect(replies.some((r) => r.includes("MinClaw"))).toBe(true);
+    expect(runAgent).not.toHaveBeenCalled();
+  });
+});
+
+describe("bot: allowlist file error handling", () => {
+  test("handles missing allowlist file gracefully", () => {
+    // Temporarily make readFileSync throw for the allowlist path
+    const origImpl = (vi.mocked(fs.readFileSync) as ReturnType<typeof vi.fn>).getMockImplementation();
+    vi.mocked(fs.readFileSync).mockImplementation(((p: string, ...args: unknown[]) => {
+      if (path.resolve(p) === ALLOWLIST_PATH) throw new Error("ENOENT");
+      return (origReadFileSync as Function).call(fs, p, ...args);
+    }) as typeof fs.readFileSync);
+
+    // Creating a bot with a missing file should not throw
+    const bot = createBot(
+      "fake-token",
+      {
+        saveMessage: vi.fn(),
+        getHistory: vi.fn(() => []),
+        dispatch: vi.fn(async () => {}),
+        clearHistory: vi.fn(),
+        restartAgent: vi.fn(async () => {}),
+      },
+      TEST_BOT_INFO,
+    );
+    expect(bot).toBeDefined();
+
+    // Restore
+    vi.mocked(fs.readFileSync).mockImplementation(origImpl!);
+  });
+
+  test("handles empty allowlist file", () => {
+    const origImpl = (vi.mocked(fs.readFileSync) as ReturnType<typeof vi.fn>).getMockImplementation();
+    vi.mocked(fs.readFileSync).mockImplementation(((p: string, ...args: unknown[]) => {
+      if (path.resolve(p) === ALLOWLIST_PATH) return "\n\n";
+      return (origReadFileSync as Function).call(fs, p, ...args);
+    }) as typeof fs.readFileSync);
+
+    const bot = createBot(
+      "fake-token",
+      {
+        saveMessage: vi.fn(),
+        getHistory: vi.fn(() => []),
+        dispatch: vi.fn(async () => {}),
+        clearHistory: vi.fn(),
+        restartAgent: vi.fn(async () => {}),
+      },
+      TEST_BOT_INFO,
+    );
+    expect(bot).toBeDefined();
+
+    vi.mocked(fs.readFileSync).mockImplementation(origImpl!);
+  });
 });

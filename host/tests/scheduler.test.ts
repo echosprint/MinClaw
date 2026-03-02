@@ -1,5 +1,5 @@
 import { describe, test, expect } from "vitest";
-import { tick } from "../src/scheduler";
+import { tick, start } from "../src/scheduler";
 import type { Job } from "../src/db";
 import type { RunPayload } from "../src/agent";
 
@@ -79,5 +79,37 @@ describe("scheduler: tick", () => {
     });
 
     expect(agentCalled).toBe(false);
+  });
+
+  test("deactivates one_shot jobs instead of advancing them", async () => {
+    const deactivated: number[] = [];
+    const advanced: number[] = [];
+
+    await tick({
+      getDueJobs: () => [makeJob({ id: 99, one_shot: 1 })],
+      advanceJob: (id) => {
+        advanced.push(id);
+      },
+      deactivateJob: (id) => {
+        deactivated.push(id);
+      },
+      dispatch: async () => {},
+    });
+
+    expect(deactivated).toEqual([99]);
+    expect(advanced).toEqual([]);
+  });
+});
+
+describe("scheduler: start", () => {
+  test("returns an interval handle that can be cleared", () => {
+    const handle = start({
+      getDueJobs: () => [],
+      advanceJob: () => {},
+      deactivateJob: () => {},
+      dispatch: async () => {},
+    });
+    expect(handle).toBeDefined();
+    clearInterval(handle);
   });
 });

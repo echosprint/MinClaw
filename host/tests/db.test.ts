@@ -69,4 +69,36 @@ describe("db: jobs", () => {
     const due = db.getDueJobs();
     expect(due.some((j) => j.id === id)).toBe(false);
   });
+
+  test("getActiveJobs returns only active jobs for that chatId", () => {
+    const id1 = db.addJob("chatX", "0 9 * * *", "task1", Date.now());
+    const id2 = db.addJob("chatX", "0 10 * * *", "task2", Date.now());
+    db.addJob("chatY", "0 11 * * *", "otherChat", Date.now());
+    db.deactivateJob(id2);
+
+    const jobs = db.getActiveJobs("chatX");
+    expect(jobs.some((j) => j.id === id1)).toBe(true);
+    expect(jobs.some((j) => j.id === id2)).toBe(false);
+    expect(jobs.every((j) => j.chat_id === "chatX")).toBe(true);
+  });
+
+  test("cancelJob deactivates a job matching id and chatId", () => {
+    const id = db.addJob("chatC", "* * * * *", "cancel me", Date.now());
+    const cancelled = db.cancelJob(id, "chatC");
+    expect(cancelled).toBe(true);
+    expect(db.getActiveJobs("chatC").some((j) => j.id === id)).toBe(false);
+  });
+
+  test("cancelJob returns false when chatId does not match", () => {
+    const id = db.addJob("chatD", "* * * * *", "task", Date.now());
+    const cancelled = db.cancelJob(id, "wrong-chat");
+    expect(cancelled).toBe(false);
+  });
+
+  test("addJob stores one_shot flag correctly", () => {
+    const id = db.addJob("chatE", "0 9 * * *", "once", Date.now(), true);
+    const jobs = db.getActiveJobs("chatE");
+    const job = jobs.find((j) => j.id === id);
+    expect(job?.one_shot).toBe(1);
+  });
 });

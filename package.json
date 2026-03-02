@@ -5,6 +5,9 @@
   "scripts": {
     "fmt": "prettier --write \"**/*.{ts,json}\" --ignore-path .prettierignore",
     "test": "pnpm -r test",
+    "test:host": "pnpm --filter minclaw-host test",
+    "test:agent": "pnpm --filter minclaw-agent test",
+    "test:coverage": "pnpm --filter minclaw-host exec vitest run --coverage && pnpm --filter minclaw-agent exec vitest run --coverage",
     "dev:host": "pnpm --filter minclaw-host dev",
     "dev:agent": "pnpm --filter minclaw-agent dev",
     "build": "agent/build.sh",
@@ -17,6 +20,7 @@
     "clear-log": "rm -f log/minclaw.log && touch log/minclaw.log"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "^4.0.18",
     "prettier": "^3.0.0"
   },
   "pnpm": {

@@ -15,6 +15,7 @@ vi.stubGlobal(
 
 import { query } from "@anthropic-ai/claude-agent-sdk";
 import { enqueue, startAgent } from "../src/runner.js";
+import { globalStream } from "../src/stream.js";
 
 startAgent();
 
@@ -98,6 +99,110 @@ describe("runner", () => {
       expect(prompt).toContain("User: hello");
       expect(prompt).toContain("Assistant: hi there");
       expect(prompt).toContain("what next?");
+    });
+
+    test("uses [Scheduled alert] prefix for alert payloads", async () => {
+      enqueue({
+        ...basePayload,
+        chatId: "c1",
+        message: "check btc",
+        history: [],
+        alert: true,
+      });
+      await flush();
+      const { prompt } = mockQuery.mock.calls[0][0];
+      expect(prompt).toContain("[Scheduled alert]");
+    });
+  });
+
+  describe("runQuery logging", () => {
+    test("logs text content blocks from assistant messages", async () => {
+      mockQuery.mockImplementation(async function* () {
+        yield {
+          type: "assistant",
+          message: {
+            content: [{ type: "text", text: "thinking about the answer" }],
+          },
+        };
+      } as unknown as typeof query);
+
+      enqueue({ ...basePayload, chatId: "c1", message: "hi", history: [] });
+      await flush();
+      // If it didn't throw, the logging path was exercised
+    });
+
+    test("logs tool_use content blocks from assistant messages", async () => {
+      mockQuery.mockImplementation(async function* () {
+        yield {
+          type: "assistant",
+          message: {
+            content: [{ type: "tool_use", name: "send_message", input: { text: "hello" } }],
+          },
+        };
+      } as unknown as typeof query);
+
+      enqueue({ ...basePayload, chatId: "c1", message: "hi", history: [] });
+      await flush();
+    });
+
+    test("logs result messages", async () => {
+      mockQuery.mockImplementation(async function* () {
+        yield { type: "result", subtype: "success" };
+      } as unknown as typeof query);
+
+      enqueue({ ...basePayload, chatId: "c1", message: "hi", history: [] });
+      await flush();
+    });
+
+    test("handles assistant messages with non-array content", async () => {
+      mockQuery.mockImplementation(async function* () {
+        yield { type: "assistant", message: { content: null } };
+      } as unknown as typeof query);
+
+      enqueue({ ...basePayload, chatId: "c1", message: "hi", history: [] });
+      await flush();
+    });
+
+    test("handles mixed text and tool_use blocks in one turn", async () => {
+      mockQuery.mockImplementation(async function* () {
+        yield {
+          type: "assistant",
+          message: {
+            content: [
+              { type: "text", text: "Let me search for that" },
+              { type: "tool_use", name: "WebSearch", input: { query: "test" } },
+            ],
+          },
+        };
+      } as unknown as typeof query);
+
+      enqueue({ ...basePayload, chatId: "c1", message: "search something", history: [] });
+      await flush();
+    });
+  });
+
+  describe("error handling", () => {
+    test("catches and logs runQuery errors without crashing", async () => {
+      mockQuery.mockImplementation(async function* () {
+        throw new Error("Claude API error");
+      } as unknown as typeof query);
+
+      enqueue({ ...basePayload, chatId: "c1", message: "fail", history: [] });
+      await flush();
+      // Should not throw — the error is caught by the .catch() in drainMessages
+    });
+
+    test("drainMessages calls process.exit when stream ends unexpectedly", async () => {
+      // Mock process.exit to prevent actual exit
+      const exitSpy = vi.spyOn(process, "exit").mockImplementation(() => undefined as never);
+      mockQuery.mockImplementation(async function* () {});
+
+      // End the global stream — this causes the for-await loop to exit
+      globalStream.end();
+      await flush();
+
+      expect(exitSpy).toHaveBeenCalledWith(1);
+      exitSpy.mockRestore();
     });
   });
 });

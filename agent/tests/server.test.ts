@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeAll, afterAll } from "vitest";
 import http from "http";
 import { createServer } from "../src/server.js";
-import type { RunPayload } from "../src/enqueuener.js";
+import type { RunPayload } from "../src/runner.js";
 
 const PORT = 4099;
 
@@ -52,5 +52,15 @@ describe("agent server", () => {
   test("unknown route → 404", async () => {
     const res = await fetch(`http://localhost:${PORT}/unknown`);
     expect(res.status).toBe(404);
+  });
+
+  test("server error handler returns 500", async () => {
+    // Sending a body that causes payload.message.slice to throw covers the catch block
+    const res = await fetch(`http://localhost:${PORT}/enqueue`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chatId: "c1" }), // missing message field
+    });
+    expect(res.status).toBe(500);
   });
 });

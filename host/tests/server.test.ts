@@ -65,4 +65,100 @@ describe("host server", () => {
     const res = await fetch(`http://localhost:${PORT}/unknown`);
     expect(res.status).toBe(404);
   });
+
+  test("GET /health → 200 with ok:true", async () => {
+    const res = await fetch(`http://localhost:${PORT}/health`);
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data).toEqual({ ok: true });
+  });
+
+  test("GET /timezone → 200 with timezone string", async () => {
+    const res = await fetch(`http://localhost:${PORT}/timezone`);
+    expect(res.status).toBe(200);
+    const data = (await res.json()) as { timezone: string };
+    expect(typeof data.timezone).toBe("string");
+    expect(data.timezone.length).toBeGreaterThan(0);
+  });
+
+  test("POST /log → 200", async () => {
+    const res = await post("/log", { level: "info", msg: "test log" });
+    expect(res.status).toBe(200);
+  });
+
+  test("POST /log with missing fields uses defaults", async () => {
+    const res = await post("/log", {});
+    expect(res.status).toBe(200);
+  });
+
+  test("GET /history → 200 with empty array", async () => {
+    const res = await fetch(`http://localhost:${PORT}/history?chatId=c1&limit=10`);
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data).toEqual([]);
+  });
+
+  test("GET /history uses defaults when params missing", async () => {
+    const res = await fetch(`http://localhost:${PORT}/history`);
+    expect(res.status).toBe(200);
+  });
+
+  test("GET /jobs → 200 with empty array", async () => {
+    const res = await fetch(`http://localhost:${PORT}/jobs?chatId=c1`);
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data).toEqual([]);
+  });
+
+  test("GET /jobs uses empty chatId when param missing", async () => {
+    const res = await fetch(`http://localhost:${PORT}/jobs`);
+    expect(res.status).toBe(200);
+  });
+
+  test("POST /cancel-job → 200 with cancelled:false", async () => {
+    const res = await post("/cancel-job", { chatId: "c1", jobId: 999 });
+    expect(res.status).toBe(200);
+    const data = (await res.json()) as { cancelled: boolean };
+    expect(data.cancelled).toBe(false);
+  });
+
+  test("POST /schedule with one_shot → 200 with jobId", async () => {
+    const res = await post("/schedule", {
+      chatId: "c1",
+      cron: "0 9 * * *",
+      task: "once",
+      one_shot: true,
+    });
+    expect(res.status).toBe(200);
+    const data = (await res.json()) as { jobId: number };
+    expect(typeof data.jobId).toBe("number");
+  });
+
+  test("POST /send handles sendToTelegram error → 500", async () => {
+    // We need a separate server instance with a throwing sendToTelegram
+    const errorServer = createServer(
+      {
+        sendToTelegram: async () => {
+          throw new Error("Telegram API error");
+        },
+        saveMessage: () => {},
+        addJob: () => 1,
+        getActiveJobs: () => [],
+        cancelJob: () => false,
+        getHistory: () => [],
+      },
+      PORT + 1,
+    );
+
+    try {
+      const res = await fetch(`http://localhost:${PORT + 1}/send`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chatId: "c1", text: "fail" }),
+      });
+      expect(res.status).toBe(500);
+    } finally {
+      errorServer.close();
+    }
+  });
 });

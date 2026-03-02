@@ -7,3 +7,4 @@ dist/
 /data/
 client_secret*.json
 TELEGRAM_ALLOWED_IDS
+coverage/
