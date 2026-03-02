@@ -14,16 +14,8 @@ function respond(res: http.ServerResponse, status: number, data?: unknown): void
 function readBody(req: http.IncomingMessage): Promise<unknown> {
   return new Promise((resolve, reject) => {
     let raw = "";
-    req.on("data", (chunk) => {
-      raw += chunk;
-    });
-    req.on("end", () => {
-      try {
-        resolve(JSON.parse(raw || "{}"));
-      } catch {
-        reject(new Error("Invalid JSON"));
-      }
-    });
+    req.on("data", (c) => (raw += c));
+    req.on("end", () => resolve(JSON.parse(raw || "{}")));
     req.on("error", reject);
   });
 }
