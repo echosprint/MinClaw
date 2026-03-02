@@ -18,7 +18,7 @@ const HOST_PORT = Number(process.env.HOST_PORT ?? 13821);
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? "";
 
 if (!BOT_TOKEN) {
-  console.error("TELEGRAM_BOT_TOKEN is required");
+  log.error("TELEGRAM_BOT_TOKEN is required");
   process.exit(1);
 }
 
@@ -49,13 +49,13 @@ bot = createBot(BOT_TOKEN, {
   clearHistory: db.clearHistory,
   restartAgent: agentRestartAgent,
 });
-bot.catch((err) => console.error("[bot] error:", err));
+bot.catch((err) => log.error(`bot error: ${err}`));
 bot
   .start({
-    onStart: (info) => console.log(`[bot] polling started @${info.username}`),
+    onStart: (info) => log.info(`Telegram polling started @${info.username}`),
   })
   .catch((err) => {
-    console.error("[bot] failed to start:", err);
+    log.error(`failed to start: ${err}`);
     process.exit(1);
   });
 
