@@ -11,6 +11,7 @@ PROXY="${HTTPS_PROXY:-${https_proxy:-${HTTP_PROXY:-${http_proxy:-}}}}"
 PROXY_ARGS=()
 if [[ -n "$PROXY" ]]; then
   DOCKER_PROXY="${PROXY//127.0.0.1/host.docker.internal}"
+  DOCKER_PROXY="${DOCKER_PROXY//localhost/host.docker.internal}"
   PROXY_ARGS=(--build-arg "https_proxy=${DOCKER_PROXY}" --build-arg "http_proxy=${DOCKER_PROXY}")
 fi
 

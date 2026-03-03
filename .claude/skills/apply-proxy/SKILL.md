@@ -55,10 +55,10 @@ git merge-file docker-compose.yml bases/docker-compose.yml "$SKILL/files/docker-
 
 If exit code is non-zero, conflict markers (`<<<<<<<`) were inserted — resolve before continuing.
 
-| File                 | What changes                                                |
-|----------------------|-------------------------------------------------------------|
-| `agent/build.sh`     | Auto-detect `HTTPS_PROXY` from env, pass to Docker builds   |
-| `docker-compose.yml` | Pass `HTTPS_PROXY` / `HTTP_PROXY` into the container         |
+| File                 | What changes                                                       |
+|----------------------|--------------------------------------------------------------------|
+| `agent/build.sh`     | Auto-detect proxy, rewrite `localhost`/`127.0.0.1` for Docker use  |
+| `docker-compose.yml` | Pass `HTTPS_PROXY` / `HTTP_PROXY` into the container               |
 
 ## Step 3: Docker daemon proxy (Linux only)
 
