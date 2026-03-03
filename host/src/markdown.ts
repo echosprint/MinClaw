@@ -10,8 +10,8 @@ export function mdToHtml(text: string): string {
   // 1. Escape HTML entities
   let result = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-  // 2. Horizontal rules --- → Unicode divider (Telegram has no <hr>)
-  result = result.replace(/^[ \t]*---+[ \t]*$/gm, "──────────────────");
+  // 2. Horizontal rules --- → two empty lines as separation (Telegram has no <hr>)
+  result = result.replace(/^[ \t]*---+[ \t]*$/gm, "\n");
 
   // 3. Stash code blocks, tables, and inline code so subsequent regexes
   //    cannot match inside them or across their boundaries.
