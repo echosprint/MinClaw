@@ -140,3 +140,4 @@ Target **50–80 words**. Example:
 - Try wttr.in first — it is significantly faster than searching
 - Supports airport codes: `wttr.in/PVG`, `wttr.in/LAX`
 - Don't make redundant requests — one fetch is enough for most queries
+- Do NOT include source links or a "Sources:" section in weather replies — just give the weather
