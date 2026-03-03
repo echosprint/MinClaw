@@ -67,7 +67,7 @@ pnpm build:fresh
 | Alibaba Cloud   | `mirrors.aliyun.com`           |
 | USTC            | `mirrors.ustc.edu.cn`          |
 
-| npm mirror         | Registry URL                                   |
-|--------------------|-------------------------------------------------|
-| npmmirror (Taobao) | `https://registry.npmmirror.com`                |
-| Huawei Cloud       | `https://repo.huaweicloud.com/repository/npm/`  |
+| npm mirror         | Registry URL                                  |
+|--------------------|-----------------------------------------------|
+| npmmirror (Taobao) | `https://registry.npmmirror.com`              |
+| Huawei Cloud       | `https://repo.huaweicloud.com/repository/npm/`|
