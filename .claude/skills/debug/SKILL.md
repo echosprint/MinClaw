@@ -300,37 +300,9 @@ ls -la data/memory/
 
 ### 6. Bot can't reach Telegram (GFW / China network)
 
-Telegram is blocked in China. Even if a system-level VPN is active, **Node.js does not automatically inherit the proxy** — you must configure it explicitly.
-
 **Symptom:** The host starts, the bot token is valid, but messages are never received and no polling activity appears in the log. Or the host crashes with a connection timeout on startup.
 
-**Fix:** Set `HTTPS_PROXY` in your `.env`:
-
-```bash
-# .env
-HTTPS_PROXY=http://127.0.0.1:7897   # replace with your local proxy port
-```
-
-The host's Grammy bot reads `HTTPS_PROXY` at startup and routes all Telegram API calls through it. The agent container also has `HTTPS_PROXY` wired in `docker-compose.yml` if needed.
-
-**Verify your proxy is working:**
-
-```bash
-source .env
-curl -x "${HTTPS_PROXY}" -s -o /dev/null -w "HTTP %{http_code}\n" --max-time 5 https://api.telegram.org
-# Any HTTP response (200, 302, 403…) means the proxy is reachable
-# A timeout or "Failed to connect" means the proxy is not working
-```
-
-**Common proxy ports by tool:**
-
-| Tool  | Default port |
-|-------|--------------|
-| Clash | `7890`       |
-| V2Ray | `10809`      |
-| Surge | `6152`       |
-
-> **Note:** The proxy address must use `host.docker.internal` for the **container** to reach a proxy running on the host. The `.env` value uses `127.0.0.1` (for the host process). `docker-compose.yml` substitutes `${DOCKER_BUILD_PROXY}` (e.g. `http://host.docker.internal:7897`) for the build step and `HTTPS_PROXY` for the container runtime if configured.
+This is a proxy issue. Run the `/apply-proxy` skill — it covers host proxy, Docker build proxy, container runtime, and Docker daemon configuration with diagnostics.
 
 ---
 
@@ -500,64 +472,22 @@ docker builder prune -f
 cd agent && bash build.sh
 ```
 
-## Docker Build Network Failures (apt-get)
+## Docker Build Network Failures (apt-get / npm)
 
-`apt-get update` and `apt-get install` during `docker build` can fail with network errors — connection timeouts, `Could not resolve`, `Failed to fetch`, `Hash Sum mismatch`. This is especially common in China where Debian mirrors and package CDNs are often unreachable or slow. This is almost always a transient network issue, not a code problem. **Just retry.**
-
-**Retry the build directly:**
+`apt-get` or `npm install` during `docker build` can fail with network errors — connection timeouts, `Could not resolve`, `Failed to fetch`. This is almost always a transient network issue, not a code problem. **Just retry:**
 
 ```bash
-# Retry base image build
-cd agent && bash build.sh --base
-
-# Or use pnpm build:fresh (base + app)
-pnpm build:fresh
+cd agent && bash build.sh --base   # or: pnpm build:fresh
 ```
 
-If it keeps failing after 2–3 tries:
-
-**Switch to a Chinese Debian mirror.** `build.sh` reads `.env` automatically — just set `DEBIAN_MIRROR` and retry:
-
-```bash
-# .env
-DEBIAN_MIRROR=mirrors.tuna.tsinghua.edu.cn
-```
-
-Then rebuild:
-
-```bash
-pnpm build:fresh
-```
-
-Other reliable mirrors in China:
-
-| Mirror | Host |
-| ------ | ---- |
-| Tsinghua (TUNA) | `mirrors.tuna.tsinghua.edu.cn` |
-| Alibaba Cloud | `mirrors.aliyun.com` |
-| USTC | `mirrors.ustc.edu.cn` |
-
-**Use a proxy for the build.** Set `DOCKER_BUILD_PROXY` in `.env` — `build.sh` picks it up automatically:
-
-```bash
-# .env
-DOCKER_BUILD_PROXY=http://host.docker.internal:7897
-```
-
-Then rebuild:
-
-```bash
-pnpm build:fresh
-```
-
-**Clear stale layer cache and retry:**
+If it keeps failing after 2–3 tries, clear stale cache and retry:
 
 ```bash
 docker builder prune -f
 pnpm build:fresh
 ```
 
-**Check which step failed** — if it's a specific `apt-get install` package, the error message names the package. A single package failing is usually a mirror glitch; retry resolves it.
+For mirror configuration (Debian apt, npm registry), use the `/apply-mirror` skill. For proxy configuration, use the `/apply-proxy` skill.
 
 ---
 

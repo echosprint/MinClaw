@@ -1,0 +1,19 @@
+services:
+  agent:
+    image: minclaw-agent:latest
+    ports:
+      - "127.0.0.1:14827:14827"
+    environment:
+      - CLAUDE_CODE_OAUTH_TOKEN=${CLAUDE_CODE_OAUTH_TOKEN}
+      - HOST_URL=http://host.docker.internal:13821
+      - AGENT_PORT=14827
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+      - GOOGLE_REFRESH_TOKEN=${GOOGLE_REFRESH_TOKEN:-}
+      - GH_TOKEN=${GH_TOKEN:-}
+      - HTTPS_PROXY=${HTTPS_PROXY:-}
+      - HTTP_PROXY=${HTTPS_PROXY:-}
+    volumes:
+      - ./data/memory:/workspace/memory
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

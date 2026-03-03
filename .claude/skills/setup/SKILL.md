@@ -238,12 +238,7 @@ If not set, GitHub tools silently fail but the rest of MinClaw works normally.
 
 `AskUserQuestion: Do you use an HTTP proxy? (e.g. Clash, Surge)`
 
-If yes, collect the proxy URL and add:
-
-```text
-HTTPS_PROXY=http://127.0.0.1:<port>
-DOCKER_BUILD_PROXY=http://host.docker.internal:<port>
-```
+If yes, run the `/apply-proxy` skill — it handles host proxy, Docker build proxy, container runtime, and Docker daemon configuration.
 
 ---
 
@@ -263,8 +258,6 @@ docker info > /dev/null 2>&1 && echo "RUNNING" || echo "NOT_RUNNING"
   - macOS: `brew install --cask docker`, then `open -a Docker` and wait
   - Linux: `curl -fsSL https://get.docker.com | sh && sudo usermod -aG docker $USER` (user may need to re-login)
 
-If `DOCKER_BUILD_PROXY` is set in `.env`, pass it through during builds with `--build-arg https_proxy=...`.
-
 ---
 
 ## Phase 4: Build Agent Docker Image
@@ -283,7 +276,7 @@ If **MISSING**, build it (takes several minutes — Chromium is large):
 cd agent && bash build.sh --base
 ```
 
-If the build needs a proxy, set `DOCKER_BUILD_PROXY` in `.env` — `build.sh` sources `.env` automatically and passes the proxy as build-args. No manual docker command needed.
+If the build needs a proxy or mirror, see `/apply-proxy` and `/apply-mirror` — `build.sh` sources `.env` automatically.
 
 ### 4b. Agent image (fast, rebuild on code changes)
 
@@ -296,7 +289,7 @@ If **BUILD FAILS:**
 - Read the Docker build output for the root cause.
 - Stale cache: `docker builder prune -f`, then retry.
 - Missing npm packages: check `agent/package.json`, run `pnpm install` in `agent/`, retry.
-- Proxy error: ensure `DOCKER_BUILD_PROXY` is set correctly in `.env`.
+- Proxy/mirror error: see `/apply-proxy` and `/apply-mirror`.
 
 Confirm the image exists:
 
