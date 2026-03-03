@@ -11,8 +11,8 @@ services:
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
       - GOOGLE_REFRESH_TOKEN=${GOOGLE_REFRESH_TOKEN:-}
       - GH_TOKEN=${GH_TOKEN:-}
-      - HTTPS_PROXY=http://host.docker.internal:7897
-      - HTTP_PROXY=http://host.docker.internal:7897
+      - HTTPS_PROXY=${DOCKER_BUILD_PROXY:-}
+      - HTTP_PROXY=${DOCKER_BUILD_PROXY:-}
     volumes:
       - ./data/memory:/workspace/memory
     extra_hosts:

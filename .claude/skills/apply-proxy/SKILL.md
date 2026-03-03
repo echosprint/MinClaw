@@ -32,11 +32,16 @@ fi
 
 Use the detected proxy URL. If none detected, ask the user for their proxy port.
 
-## Step 1: Set `HTTPS_PROXY` in `.env`
+## Step 1: Set proxy vars in `.env`
 
 ```bash
 HTTPS_PROXY=http://127.0.0.1:<port>
 ```
+
+`DOCKER_BUILD_PROXY` is the proxy address reachable from inside Docker containers:
+
+- **macOS** (bridge networking): `DOCKER_BUILD_PROXY=http://host.docker.internal:<port>`
+- **Linux** (host networking): `DOCKER_BUILD_PROXY=http://127.0.0.1:<port>`
 
 ## Step 2: Merge
 
