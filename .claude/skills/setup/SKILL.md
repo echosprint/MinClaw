@@ -27,6 +27,7 @@ Run setup steps automatically. Only pause when user action is required (obtainin
 Before running any steps, do a quick state check so you only redo what's actually needed.
 
 ```bash
+echo "OS=$(uname -s)"
 node --version 2>/dev/null || echo "NODE_MISSING"
 pnpm --version 2>/dev/null || echo "PNPM_MISSING"
 test -f .env && echo "ENV_EXISTS" || echo "ENV_MISSING"
@@ -36,6 +37,9 @@ docker image inspect minclaw-agent-base:latest > /dev/null 2>&1 && echo "BASE_EX
 docker image inspect minclaw-agent:latest > /dev/null 2>&1 && echo "AGENT_EXISTS" || echo "AGENT_MISSING"
 docker ps --filter name=minclaw --format "{{.Names}}" | grep -q minclaw && echo "CONTAINER_RUNNING" || echo "CONTAINER_DOWN"
 lsof -i :13821 | grep -q LISTEN && echo "HOST_RUNNING" || echo "HOST_DOWN"
+# Proxy detection
+PROXY="${HTTPS_PROXY:-${https_proxy:-${HTTP_PROXY:-${http_proxy:-}}}}"
+[ -n "$PROXY" ] && echo "PROXY_ENV=$PROXY" || ([ -f .env ] && grep -q "HTTPS_PROXY" .env && echo "PROXY_DOTENV" || echo "NO_PROXY")
 ```
 
 Use the results to skip steps that are already complete. Summarise what will be done before starting.
@@ -234,11 +238,13 @@ If not set, GitHub tools silently fail but the rest of MinClaw works normally.
 
 ---
 
-### 2f. Optional Proxy
+### 2f. Platform Fixes (auto-detected)
 
-`AskUserQuestion: Do you use an HTTP proxy? (e.g. Clash, Surge)`
+**Linux** (`OS=Linux` from Phase 0): Run the `/apply-linux` skill — switches the agent container to host networking so it can reach the host.
 
-If yes, run the `/apply-proxy` skill — it handles host proxy, Docker build proxy, container runtime, and Docker daemon configuration.
+**Proxy** (`PROXY_ENV` or `PROXY_DOTENV` from Phase 0): Run the `/apply-proxy` skill — patches `build.sh` and `docker-compose.yml` for Docker build and container runtime proxy.
+
+**Mirror** (optional): If in China or builds are slow, run `/apply-mirror`.
 
 ---
 
