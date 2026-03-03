@@ -6,13 +6,17 @@ cd "$SCRIPT_DIR"
 
 RUNTIME="${CONTAINER_RUNTIME:-docker}"
 
-# Detect proxy from environment and convert to Docker-reachable address
+# Detect proxy from environment; on Linux use --network=host so 127.0.0.1 works directly
 PROXY="${HTTPS_PROXY:-${https_proxy:-${HTTP_PROXY:-${http_proxy:-}}}}"
 PROXY_ARGS=()
 if [[ -n "$PROXY" ]]; then
-  DOCKER_PROXY="${PROXY//127.0.0.1/host.docker.internal}"
-  DOCKER_PROXY="${DOCKER_PROXY//localhost/host.docker.internal}"
-  PROXY_ARGS=(--build-arg "https_proxy=${DOCKER_PROXY}" --build-arg "http_proxy=${DOCKER_PROXY}")
+  if [[ "$(uname)" == "Linux" ]]; then
+    PROXY_ARGS=(--network=host --build-arg "https_proxy=${PROXY}" --build-arg "http_proxy=${PROXY}")
+  else
+    DOCKER_PROXY="${PROXY//127.0.0.1/host.docker.internal}"
+    DOCKER_PROXY="${DOCKER_PROXY//localhost/host.docker.internal}"
+    PROXY_ARGS=(--build-arg "https_proxy=${DOCKER_PROXY}" --build-arg "http_proxy=${DOCKER_PROXY}")
+  fi
 fi
 
 if [[ "$1" == "--base" ]]; then

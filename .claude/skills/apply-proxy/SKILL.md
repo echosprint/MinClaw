@@ -55,7 +55,7 @@ If exit code is non-zero, conflict markers (`<<<<<<<`) were inserted — resolve
 
 | File                 | What changes                                                       |
 |----------------------|--------------------------------------------------------------------|
-| `agent/build.sh`     | Auto-detect proxy, rewrite `localhost`/`127.0.0.1` for Docker use  |
+| `agent/build.sh`     | Auto-detect proxy; Linux: `--network=host`, macOS: rewrite to `host.docker.internal` |
 | `docker-compose.yml` | Pass `HTTPS_PROXY` / `HTTP_PROXY` into the container               |
 
 ## Step 3: Docker daemon proxy (Linux only)
