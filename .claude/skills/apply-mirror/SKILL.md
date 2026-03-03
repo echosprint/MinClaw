@@ -27,14 +27,12 @@ pnpm config get registry 2>/dev/null || echo "(pnpm not found)"
 
 ## Merge
 
-Saves originals to `bases/` (first time only), then three-way merges — user edits outside the patched regions are preserved.
+Snapshots the repo to `bases/` (first time only via `git archive`), then three-way merges — user edits outside the patched regions are preserved.
 
 ```bash
 SKILL=.claude/skills/apply-mirror
 
-for f in agent/Dockerfile.base agent/Dockerfile; do
-  [ -f "bases/$f" ] || { mkdir -p "bases/$(dirname "$f")"; cp "$f" "bases/$f"; }
-done
+[ -d bases ] || (mkdir -p bases && git archive HEAD | tar -x -C bases/)
 
 git merge-file agent/Dockerfile.base bases/agent/Dockerfile.base "$SKILL/files/Dockerfile.base"
 git merge-file agent/Dockerfile      bases/agent/Dockerfile      "$SKILL/files/Dockerfile"

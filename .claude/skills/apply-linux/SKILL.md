@@ -21,12 +21,12 @@ docker exec $(docker ps -qf name=minclaw) curl -s http://127.0.0.1:13821/health 
 
 ## Merge
 
-Saves originals to `bases/` (first time only), then three-way merges — user edits outside the patched regions are preserved.
+Snapshots the repo to `bases/` (first time only via `git archive`), then three-way merges — user edits outside the patched regions are preserved.
 
 ```bash
 SKILL=.claude/skills/apply-linux
 
-[ -f bases/docker-compose.yml ] || { mkdir -p bases; cp docker-compose.yml bases/; }
+[ -d bases ] || (mkdir -p bases && git archive HEAD | tar -x -C bases/)
 
 git merge-file docker-compose.yml bases/docker-compose.yml "$SKILL/files/docker-compose.yml"
 ```

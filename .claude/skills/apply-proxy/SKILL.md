@@ -40,14 +40,12 @@ HTTPS_PROXY=http://127.0.0.1:<port>
 
 ## Step 2: Merge
 
-Saves originals to `bases/` (first time only), then three-way merges — user edits outside the patched regions are preserved.
+Snapshots the repo to `bases/` (first time only via `git archive`), then three-way merges — user edits outside the patched regions are preserved.
 
 ```bash
 SKILL=.claude/skills/apply-proxy
 
-for f in agent/build.sh docker-compose.yml; do
-  [ -f "bases/$f" ] || { mkdir -p "bases/$(dirname "$f")"; cp "$f" "bases/$f"; }
-done
+[ -d bases ] || (mkdir -p bases && git archive HEAD | tar -x -C bases/)
 
 git merge-file agent/build.sh     bases/agent/build.sh     "$SKILL/files/build.sh"
 git merge-file docker-compose.yml bases/docker-compose.yml "$SKILL/files/docker-compose.yml"
