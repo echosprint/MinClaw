@@ -32,6 +32,9 @@ createServer(
     sendToTelegram: async (chatId, text) => {
       await bot.api.sendMessage(chatId, mdToHtml(text), { parse_mode: "HTML" });
     },
+    sendTyping: async (chatId) => {
+      await bot.api.sendChatAction(chatId, "typing").catch(() => {});
+    },
     saveMessage: db.saveMessage,
     addJob: db.addJob,
     getActiveJobs: db.getActiveJobs,

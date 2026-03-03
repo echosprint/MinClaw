@@ -92,6 +92,17 @@ async function runQuery(payload: RunPayload): Promise<void> {
 
   log.info(`run start  chatId=${payload.chatId}`);
 
+  // Send Telegram "typing…" every 4s while the agent loop is running.
+  // Typing auto-expires after ~5s in Telegram, so 4s keeps it alive.
+  const sendTyping = () =>
+    fetch(`${HOST_URL}/typing`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chatId: payload.chatId }),
+    }).catch(() => {});
+  sendTyping();
+  const typingInterval = setInterval(sendTyping, 4000);
+
   const mcpServers = {
     minclaw: {
       command: "node",
@@ -148,5 +159,6 @@ async function runQuery(payload: RunPayload): Promise<void> {
     }
   }
 
+  clearInterval(typingInterval);
   log.info(`run done   chatId=${payload.chatId}`);
 }

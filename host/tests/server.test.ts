@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeAll, afterAll } from "vitest";
+import { describe, test, expect, beforeAll, afterAll, vi } from "vitest";
 import http from "http";
 import { createServer } from "../src/server";
 
@@ -9,6 +9,7 @@ describe("host server", () => {
   const sent: { chatId: string; text: string }[] = [];
   const savedMsgs: { chatId: string; role: string; content: string }[] = [];
   const savedJobs: { chatId: string; cron: string; task: string }[] = [];
+  const sendTyping = vi.fn(async () => {});
 
   beforeAll(() => {
     server = createServer(
@@ -16,6 +17,7 @@ describe("host server", () => {
         sendToTelegram: async (chatId, text) => {
           sent.push({ chatId, text });
         },
+        sendTyping,
         saveMessage: (chatId, role, content) => {
           savedMsgs.push({ chatId, role, content });
         },
@@ -134,6 +136,13 @@ describe("host server", () => {
     expect(typeof data.jobId).toBe("number");
   });
 
+  test("POST /typing → 200, calls sendTyping with correct chatId", async () => {
+    sendTyping.mockClear();
+    const res = await post("/typing", { chatId: "c1" });
+    expect(res.status).toBe(200);
+    expect(sendTyping).toHaveBeenCalledWith("c1");
+  });
+
   test("POST /send handles sendToTelegram error → 500", async () => {
     // We need a separate server instance with a throwing sendToTelegram
     const errorServer = createServer(
@@ -141,6 +150,7 @@ describe("host server", () => {
         sendToTelegram: async () => {
           throw new Error("Telegram API error");
         },
+        sendTyping: async () => {},
         saveMessage: () => {},
         addJob: () => 1,
         getActiveJobs: () => [],

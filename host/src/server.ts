@@ -10,6 +10,7 @@ import { log } from "./log";
 
 export interface ServerDeps {
   sendToTelegram: (chatId: string, text: string) => Promise<void>;
+  sendTyping: (chatId: string) => Promise<void>;
   saveMessage: (chatId: string, role: Role, content: string) => void;
   addJob: (
     chatId: string,
@@ -60,6 +61,13 @@ export function createServer(deps: ServerDeps, port: number): http.Server {
       // Agent cannot write files; it forwards log lines here for the host to write.
       if (route === "POST /log") {
         log.agent(body.level ?? "info", body.msg ?? "");
+        respond(res, 200);
+        return;
+      }
+
+      // Agent signals it is actively processing — show "typing…" in Telegram.
+      if (route === "POST /typing") {
+        await deps.sendTyping(body.chatId);
         respond(res, 200);
         return;
       }
