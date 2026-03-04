@@ -18,7 +18,9 @@ async function waitForHost(): Promise<void> {
     try {
       const res = await fetch(`${HOST_URL}/health`, { signal: AbortSignal.timeout(1000) });
       if (res.ok) return;
-    } catch {}
+    } catch (e) {
+      console.log(`Waiting for host at ${HOST_URL}... (${(e as Error).message})`);
+    }
     await new Promise((r) => setTimeout(r, 500));
   }
 }
