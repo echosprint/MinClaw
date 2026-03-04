@@ -46,7 +46,9 @@ export async function health(): Promise<{ agentOk: boolean; claudeOk: boolean }>
 export async function restartAgent(): Promise<void> {
   const { execFile } = await import("child_process");
   const { promisify } = await import("util");
-  await promisify(execFile)("docker", ["compose", "restart", "agent"], {
-    cwd: process.cwd(),
-  });
+  await promisify(execFile)(
+    "./docker-compose.sh",
+    ["restart", "agent"],
+    { cwd: process.cwd() },
+  );
 }

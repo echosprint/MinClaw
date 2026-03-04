@@ -1,0 +1,8 @@
+services:
+  agent:
+    ports:
+      - "127.0.0.1:14827:14827"
+    environment:
+      - HOST_URL=http://host.docker.internal:13821
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

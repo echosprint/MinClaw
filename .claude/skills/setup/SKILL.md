@@ -12,7 +12,10 @@ Run setup steps automatically. Only pause when user action is required (obtainin
 - `host/` — Node.js Telegram bot + HTTP server + SQLite scheduler (runs on host)
 - `agent/` — Claude Code agent in Docker container (receives `/enqueue` requests from host)
 - `.env` — secrets loaded by both `docker compose` and `pnpm dev:host`
-- `docker-compose.yml` — runs the agent container
+- `docker-compose.yml` — base service definition (platform-agnostic)
+- `docker-compose-macos.yml` — macOS overrides (port mapping, `host.docker.internal`)
+- `docker-compose-linux.yml` — Linux overrides (`network_mode: host`, `HOST_URL=127.0.0.1`)
+- `docker-compose.sh` — wrapper that auto-detects OS and merges the right compose files
 - `agent/build.sh` — builds `minclaw-agent-base` (slow, once) then `minclaw-agent` (fast, per change)
 
 **Key ports:**
@@ -225,7 +228,7 @@ GH_TOKEN=<token>
 After adding the token, verify it works inside the container:
 
 ```bash
-docker compose restart agent
+./docker-compose.sh restart agent
 docker exec $(docker ps -qf name=minclaw) gh auth status
 ```
 
@@ -251,7 +254,7 @@ Common ports: Clash `7897`, V2Ray `10809`, Surge `6152`.
 
 **Mirror** — on by default (USTC for Debian, npmmirror for npm). To disable, add `USE_MIRROR=false` to `.env`.
 
-**Linux** — `build.sh` auto-detects Linux and uses `--network=host` for Docker builds. For runtime, edit `docker-compose.yml`: add `network_mode: host`, remove `ports` and `extra_hosts`, change `HOST_URL` to `http://127.0.0.1:13821`.
+**Linux** — `build.sh` auto-detects Linux and uses `--network=host` for Docker builds. For runtime, `docker-compose.sh` auto-detects Linux and merges `docker-compose-linux.yml` (adds `network_mode: host`, overrides `HOST_URL` to `127.0.0.1`). No manual edits needed.
 
 ---
 
@@ -330,7 +333,7 @@ mkdir -p log data/db data/memory
 pnpm start
 ```
 
-This runs `docker compose up -d` (agent container, background) then `pnpm dev:host` (host process, **foreground — keep the terminal open**). The host logs appear directly in this terminal.
+This runs `docker-compose.sh up -d` (agent container, background — auto-selects macOS/Linux compose) then `pnpm dev:host` (host process, **foreground — keep the terminal open**). The host logs appear directly in this terminal.
 
 **If `docker compose up -d` fails:**
 
@@ -404,7 +407,7 @@ pnpm stop
 pnpm reboot
 ```
 
-This runs: `pnpm stop` → `agent/build.sh` → `docker compose up -d` → `pnpm dev:host`.
+This runs: `pnpm stop` → `agent/build.sh` → `docker-compose.sh up -d` → `pnpm dev:host`.
 
 **Clear all scheduled jobs:**
 

@@ -1,0 +1,5 @@
+services:
+  agent:
+    network_mode: host
+    environment:
+      - HOST_URL=http://127.0.0.1:13821
