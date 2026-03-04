@@ -31,28 +31,33 @@ function date(): string {
 // eslint-disable-next-line no-control-regex
 const ANSI_RE = /\x1b\[[0-9;]*m/g;
 
+function oneline(s: string): string {
+  return s.replace(/\n/g, "\\n").replace(/\r/g, "\\r");
+}
+
 function write(line: string): void {
-  const clean = line.replace(ANSI_RE, "").replace(/\n/g, "\\n").replace(/\r/g, "\\r");
+  const clean = line.replace(ANSI_RE, "");
   fs.appendFileSync(LOG_FILE, `[${date()}]${clean}\n`);
 }
 
 export const log = {
   info(msg: string): void {
-    const line = `[${ts()}][bot][INFO] ${msg}`;
-    console.log(`${C.gray}[${ts()}]${C.reset} ${C.bot}[bot]${C.reset} ${msg}`);
+    const safe = oneline(msg);
+    const line = `${C.gray}[${ts()}]${C.reset} ${C.bot}[bot]${C.reset} ${safe}`;
+    console.log(line);
     write(line);
   },
   error(msg: string): void {
-    const line = `[${ts()}][bot][ERROR] ${msg}`;
-    console.error(
-      `${C.gray}[${ts()}]${C.reset} ${C.bot}[bot]${C.reset} ${C.error}[ERROR]${C.reset} ${msg}`,
-    );
+    const safe = oneline(msg);
+    const line = `${C.gray}[${ts()}]${C.reset} ${C.bot}[bot]${C.reset} ${C.error}[ERROR]${C.reset} ${safe}`;
+    console.error(line);
     write(line);
   },
   agent(level: string, msg: string): void {
-    const line = `[${ts()}][agt][${level.toUpperCase()}] ${msg}`;
+    const safe = oneline(msg);
     const errSuffix = level === "error" ? ` ${C.error}[ERROR]${C.reset}` : "";
-    console.log(`${C.gray}[${ts()}]${C.reset} ${C.agt}[agt]${C.reset}${errSuffix} ${msg}`);
+    const line = `${C.gray}[${ts()}]${C.reset} ${C.agt}[agt]${C.reset}${errSuffix} ${safe}`;
+    console.log(line);
     write(line);
   },
 };
