@@ -28,8 +28,12 @@ function date(): string {
   return new Date().toLocaleDateString('en-CA');
 }
 
+// eslint-disable-next-line no-control-regex
+const ANSI_RE = /\x1b\[[0-9;]*m/g;
+
 function write(line: string): void {
-  fs.appendFileSync(LOG_FILE, `[${date()}]${line}\n`);
+  const clean = line.replace(ANSI_RE, "").replace(/\n/g, "\\n").replace(/\r/g, "\\r");
+  fs.appendFileSync(LOG_FILE, `[${date()}]${clean}\n`);
 }
 
 export const log = {
