@@ -37,9 +37,6 @@ docker image inspect minclaw-agent-base:latest > /dev/null 2>&1 && echo "BASE_EX
 docker image inspect minclaw-agent:latest > /dev/null 2>&1 && echo "AGENT_EXISTS" || echo "AGENT_MISSING"
 docker ps --filter name=minclaw --format "{{.Names}}" | grep -q minclaw && echo "CONTAINER_RUNNING" || echo "CONTAINER_DOWN"
 lsof -i :13821 | grep -q LISTEN && echo "HOST_RUNNING" || echo "HOST_DOWN"
-# Proxy detection
-PROXY="${HTTPS_PROXY:-${https_proxy:-${HTTP_PROXY:-${http_proxy:-}}}}"
-[ -n "$PROXY" ] && echo "PROXY_ENV=$PROXY" || ([ -f .env ] && grep -q "HTTPS_PROXY" .env && echo "PROXY_DOTENV" || echo "NO_PROXY")
 ```
 
 Use the results to skip steps that are already complete. Summarise what will be done before starting.
@@ -238,13 +235,23 @@ If not set, GitHub tools silently fail but the rest of MinClaw works normally.
 
 ---
 
-### 2f. Platform Fixes (auto-detected)
+### 2f. Proxy, Mirror, Linux (all handled by `build.sh`)
 
-**Linux** (`OS=Linux` from Phase 0): Run the `/apply-linux` skill — switches the agent container to host networking so it can reach the host.
+`build.sh` sources `.env` and auto-detects proxy, mirror, and OS. No separate skills needed.
 
-**Proxy** (`PROXY_ENV` or `PROXY_DOTENV` from Phase 0): Run the `/apply-proxy` skill — patches `build.sh` and `docker-compose.yml` for Docker build and container runtime proxy.
+**Proxy** — if the user is behind a proxy, add to `.env`:
 
-**Mirror** (optional): If in China or builds are slow, run `/apply-mirror`.
+```text
+HTTPS_PROXY=http://127.0.0.1:<port>
+```
+
+`build.sh` auto-detects this and rewrites the address for Docker (macOS: `host.docker.internal`, Linux: `--network=host`).
+
+Common ports: Clash `7897`, V2Ray `10809`, Surge `6152`.
+
+**Mirror** — on by default (USTC for Debian, npmmirror for npm). To disable, add `USE_MIRROR=false` to `.env`.
+
+**Linux** — `build.sh` auto-detects Linux and uses `--network=host` for Docker builds. For runtime, edit `docker-compose.yml`: add `network_mode: host`, remove `ports` and `extra_hosts`, change `HOST_URL` to `http://127.0.0.1:13821`.
 
 ---
 
@@ -282,7 +289,7 @@ If **MISSING**, build it (takes several minutes — Chromium is large):
 cd agent && bash build.sh --base
 ```
 
-If the build needs a proxy or mirror, see `/apply-proxy` and `/apply-mirror` — `build.sh` sources `.env` automatically.
+`build.sh` sources `.env` automatically — proxy, mirror, and OS are handled via env vars (see Phase 2f).
 
 ### 4b. Agent image (fast, rebuild on code changes)
 
@@ -292,10 +299,10 @@ cd agent && bash build.sh
 
 If **BUILD FAILS:**
 
-- Read the Docker build output for the root cause.
-- Stale cache: `docker builder prune -f`, then retry.
+- Network instability (common in China): retry 2–3 times — partial `apt-get` failures often succeed on the next attempt.
+- Stale cache after partial failure: `docker builder prune -f`, then retry.
 - Missing npm packages: check `agent/package.json`, run `pnpm install` in `agent/`, retry.
-- Proxy/mirror error: see `/apply-proxy` and `/apply-mirror`.
+- Proxy/mirror error: check `HTTPS_PROXY` and `USE_MIRROR` in `.env` (see Phase 2f).
 
 Confirm the image exists:
 

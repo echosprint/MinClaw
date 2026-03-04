@@ -1,6 +1,11 @@
 FROM minclaw-agent-base:latest
 
+ARG NPM_REGISTRY=https://registry.npmjs.org
+
 WORKDIR /app
+
+RUN npm config set registry $NPM_REGISTRY
+
 COPY package*.json ./
 RUN npm install
 

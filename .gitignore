@@ -8,4 +8,3 @@ dist/
 client_secret*.json
 TELEGRAM_ALLOWED_IDS
 coverage/
-/bases/
