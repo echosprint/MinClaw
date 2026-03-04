@@ -6,10 +6,11 @@
 import fs from "fs";
 import path from "path";
 
-// host runs from MinClaw/host/, log dir is MinClaw/log/
-const LOG_DIR = path.join(process.cwd(), "..", "log");
+const LOG_DIR = path.join(__dirname, "..", "..", "log");
 const LOG_FILE = path.join(LOG_DIR, "minclaw.log");
-const canWrite = fs.existsSync(LOG_DIR);
+
+fs.mkdirSync(LOG_DIR, { recursive: true });
+fs.writeFileSync(LOG_FILE, "", { flag: "a" });
 
 const C = {
   reset: "\x1b[0m",
@@ -23,8 +24,12 @@ function ts(): string {
   return new Date().toTimeString().slice(0, 8);
 }
 
+function date(): string {
+  return new Date().toLocaleDateString('en-CA');
+}
+
 function write(line: string): void {
-  if (canWrite) fs.appendFileSync(LOG_FILE, line + "\n");
+  fs.appendFileSync(LOG_FILE, `[${date()}]${line}\n`);
 }
 
 export const log = {
