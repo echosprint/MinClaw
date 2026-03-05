@@ -19,6 +19,9 @@
     "google-auth": "cd host && node --require tsx/cjs scripts/google-auth.ts",
     "clear-log": "rm -f log/minclaw.log && touch log/minclaw.log"
   },
+  "engines": {
+    "node": ">=22"
+  },
   "devDependencies": {
     "@vitest/coverage-v8": "^4.0.18",
     "prettier": "^3.0.0"
