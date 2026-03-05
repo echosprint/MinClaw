@@ -71,12 +71,12 @@ describe("health", () => {
 });
 
 describe("restartAgent", () => {
-  test("calls docker compose restart agent", async () => {
+  test("calls docker-compose.sh restart agent", async () => {
     const { execFile } = await import("child_process");
     await restartAgent();
     expect(execFile).toHaveBeenCalledWith(
-      "docker",
-      ["compose", "restart", "agent"],
+      "./docker-compose.sh",
+      ["restart", "agent"],
       expect.objectContaining({ cwd: expect.any(String) }),
       expect.any(Function),
     );

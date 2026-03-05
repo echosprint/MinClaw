@@ -6,8 +6,8 @@ describe("mdToHtml", () => {
     expect(mdToHtml("a < b & c > d")).toBe("a &lt; b &amp; c &gt; d");
   });
 
-  test("converts horizontal rule to empty line separation", () => {
-    expect(mdToHtml("---")).toBe("\n");
+  test("converts horizontal rule to Unicode divider", () => {
+    expect(mdToHtml("---")).toBe("\n──────────\n");
   });
 
   test("converts code blocks to <pre>", () => {
