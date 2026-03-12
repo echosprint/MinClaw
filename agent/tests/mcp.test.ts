@@ -90,8 +90,8 @@ describe("MCP tool handlers", () => {
       await h.schedule_job({ cron: "0 9 * * *", task: "once", one_shot: true });
 
       // Find the /schedule call (log.info also calls fetch for log forwarding)
-      const scheduleCall = mockFetch.mock.calls.find(([url]: [string]) =>
-        url.includes("/schedule"),
+      const scheduleCall = mockFetch.mock.calls.find(
+        ([url]: string[]) => url.includes("/schedule"),
       );
       expect(scheduleCall).toBeDefined();
       const body = JSON.parse(scheduleCall![1].body);
