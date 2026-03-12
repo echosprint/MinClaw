@@ -34,8 +34,6 @@ If you want to understand how the loop works, start here.
 - **Browse the web** — search and fetch pages; headless Chrome via agent-browser; click, fill forms, take screenshots
 - **Run code** — Bash, file read/write, grep, glob inside the agent container
 - **Schedule tasks** — set recurring or one-time jobs in plain language; MinClaw converts them to cron expressions
-- **Gmail** — read and summarize emails, draft and send, reply with threading
-- **Google Calendar** — add events in natural language
 - **GitHub** — check PR status and CI, create and comment on issues, view workflow run logs, query the API
 - **Code & repo work** — clone a repo, analyze architecture, make changes, open PRs via `gh`
 - **Persistent memory** — agent workspace survives container restarts at `data/memory/`
@@ -72,8 +70,6 @@ Every weekday at 9 AM, give me a weather summary for Shanghai
 What jobs do I have scheduled?
 Cancel the break reminder
 Show me the open PRs on my repo and check which ones have failing CI
-Summarise my unread emails and draft a reply to the one from Alice
-Add a calendar event: team meeting tomorrow at 2 PM
 Clone https://github.com/owner/repo and explain the architecture
 ```
 
@@ -145,7 +141,6 @@ Telegram ──► Host (Node.js / macOS or Linux)
               Agent (Docker container / port 14827)
                ├─ Claude SDK       — query() tool-use loop
                ├─ MCP server       — send_message, schedule_job, list_tasks, cancel_task
-               ├─ Gmail MCP        — draft/send email, summarize inbox, add calendar events
                ├─ Skills           — github (gh CLI), weather, agent-browser
                └─ Tools            — Bash, Read/Write/Edit, Grep, Glob,
                                      WebSearch, WebFetch, agent-browser (Chromium)
@@ -176,8 +171,6 @@ MinClaw/
 │   ├── stream.ts          — async FIFO queue (serialises agent runs)
 │   ├── mcp-server.ts      — MCP tool definitions (Telegram + scheduler)
 │   ├── mcp-handlers.ts    — MCP tool implementations
-│   ├── gmail-mcp-server.ts — Gmail + Calendar MCP tools
-│   ├── gmail-handlers.ts  — Gmail + Calendar implementations
 │   ├── config.ts          — shared constants (HOST_URL, MCP paths)
 │   ├── tz.ts              — fetches host timezone, caches for agent lifetime
 │   └── log.ts             — agent logger

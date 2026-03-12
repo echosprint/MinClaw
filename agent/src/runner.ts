@@ -3,7 +3,7 @@ import path from "path";
 import { log } from "./log.js";
 import { globalStream } from "./stream.js";
 import { getTZ } from "./tz.js";
-import { HOST_URL, mcpServerPath, gmailMcpServerPath, claudeDir } from "./config.js";
+import { HOST_URL, mcpServerPath, claudeDir } from "./config.js";
 
 export interface Message {
   role: "user" | "assistant";
@@ -42,12 +42,6 @@ const ALLOWED_TOOLS = [
   "mcp__minclaw__cancel_task",
   "mcp__minclaw__get_local_time",
   "mcp__minclaw__get_chat_history",
-  // Gmail MCP tools
-  "mcp__gmail__check_gmail_service",
-  "mcp__gmail__draft_email",
-  "mcp__gmail__send_email",
-  "mcp__gmail__summarize_emails",
-  "mcp__gmail__add_calendar_event",
 ];
 
 const options = {
@@ -111,15 +105,6 @@ async function runQuery(payload: RunPayload): Promise<void> {
       // The MCP server is spawned fresh per run, so it has no other way to
       // know which chat to send replies to or query history for.
       env: { CHAT_ID: payload.chatId, HOST_URL, TZ: await getTZ() },
-    },
-    gmail: {
-      command: "node",
-      args: [gmailMcpServerPath],
-      env: {
-        GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ?? "",
-        GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET ?? "",
-        GOOGLE_REFRESH_TOKEN: process.env.GOOGLE_REFRESH_TOKEN ?? "",
-      },
     },
   };
 

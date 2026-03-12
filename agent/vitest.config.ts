@@ -5,7 +5,7 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       include: ["src/**/*.ts"],
-      exclude: ["src/index.ts", "src/mcp-server.ts", "src/gmail-mcp-server.ts"],
+      exclude: ["src/index.ts", "src/mcp-server.ts"],
     },
   },
 });

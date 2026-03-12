@@ -336,19 +336,7 @@ The schema is auto-created by `db.init()` on next start. No data loss beyond mes
 
 ---
 
-### 10. Gmail / Calendar tools not working
-
-Check all three credentials are set in `.env`:
-
-```bash
-grep -E "GOOGLE_CLIENT_ID|GOOGLE_CLIENT_SECRET|GOOGLE_REFRESH_TOKEN" .env
-```
-
-If any are missing or the token is revoked, re-run setup Phase 2d. Also verify the OAuth consent screen has the correct scopes (`gmail.compose`, `gmail.readonly`, `calendar.events`) and your Google account is listed as a test user.
-
----
-
-### 11. Scheduler jobs not firing
+### 10. Scheduler jobs not firing
 
 Jobs are stored in `data/db/minclaw.db` and run by the host scheduler.
 
@@ -430,10 +418,6 @@ query({
       'mcp__minclaw__send_message', 'mcp__minclaw__schedule_job',
       'mcp__minclaw__list_tasks', 'mcp__minclaw__cancel_task',
       'mcp__minclaw__get_local_time', 'mcp__minclaw__get_chat_history',
-      // Gmail MCP tools
-      'mcp__gmail__check_gmail_service', 'mcp__gmail__draft_email',
-      'mcp__gmail__send_email', 'mcp__gmail__summarize_emails',
-      'mcp__gmail__add_calendar_event',
     ],
     permissionMode: 'bypassPermissions',
     allowDangerouslySkipPermissions: true,   // required with bypassPermissions
@@ -443,11 +427,6 @@ query({
         command: 'node',
         args: ['/app/dist/mcp-server.js'],
         env: { CHAT_ID: payload.chatId, HOST_URL, TZ },
-      },
-      gmail: {
-        command: 'node',
-        args: ['/app/dist/gmail-mcp-server.js'],
-        env: { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN },
       },
     },
   },
