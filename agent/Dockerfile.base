@@ -38,5 +38,5 @@ ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium
 RUN npm config set registry $NPM_REGISTRY
 
 # Global tools
-RUN npm install -g agent-browser && \
-    curl -fsSL https://claude.ai/install.sh | bash
+RUN npm install -g agent-browser
+RUN curl -fsSL https://claude.ai/install.sh | bash
