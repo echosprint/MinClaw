@@ -62,6 +62,7 @@ Write messages in standard Markdown — it is automatically converted for Telegr
 
 - `**bold**`, `_italic_`, `` `code` ``, ` ```code block``` `
 - `[label](url)` for links
+- Do NOT use `---` (horizontal rules) — they render poorly in Telegram
 
 Keep messages concise and readable.
 
