@@ -58,11 +58,11 @@ Call `mcp__minclaw__get_local_time` whenever you need the current time or timezo
 
 ## Telegram Formatting
 
-Write messages in standard Markdown — it is automatically converted for Telegram:
+Messages sent via `send_message` are delivered to Telegram. Write in standard Markdown — it is automatically converted:
 
 - `**bold**`, `_italic_`, `` `code` ``, ` ```code block``` `
 - `[label](url)` for links
-- Do NOT use `---` (horizontal rules) — they render poorly in Telegram
+- **Do NOT** use `---` (horizontal rules) — Telegram does not render them, they appear as raw dashes
 
 Keep messages concise and readable.
 
