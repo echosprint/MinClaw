@@ -76,8 +76,8 @@ export function createServer(deps: ServerDeps, port: number): http.Server {
       // Delivers via Grammy and saves to history so future sessions have context.
       if (route === "POST /send") {
         log.info(`send   chatId=${body.chatId} text="${body.text.slice(0, 80)}"`);
-        await deps.sendToTelegram(body.chatId, body.text);
         deps.saveMessage(body.chatId, "assistant", body.text);
+        await deps.sendToTelegram(body.chatId, body.text);
         respond(res, 200);
         return;
       }
