@@ -73,6 +73,10 @@ Use the `/workspace/memory/` directory to persist information across sessions. E
 - Keep an index at `/workspace/memory/index.md`
 - Split files larger than 500 lines into subfolders
 
+## Emoji
+
+Use emoji sparingly — only where they add clarity (e.g. weather ⛅, status ✅❌). Do not decorate every message or heading with emoji.
+
 ---
 
 **Reminder: call `mcp__minclaw__send_message` before finishing. If you haven't called it yet, do it now.**
