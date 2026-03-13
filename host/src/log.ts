@@ -1,16 +1,16 @@
 /*
  * Host logger. Writes colorized output to stdout and appends plain text to
- * log/minclaw.log. The agent cannot write files directly — it calls POST /log
- * on the host, which forwards the message here under the [agt] prefix.
+ * daily log files (log/minclaw-YYYY-MM-DD.log). Logs older than 7 days are
+ * cleaned up every 12 hours. The agent cannot write files directly — it calls
+ * POST /log on the host, which forwards the message here under the [agt] prefix.
  */
 import fs from "fs";
 import path from "path";
 
 const LOG_DIR = path.join(__dirname, "..", "..", "log");
-const LOG_FILE = path.join(LOG_DIR, "minclaw.log");
+const KEEP_DAYS = 7;
 
 fs.mkdirSync(LOG_DIR, { recursive: true });
-fs.writeFileSync(LOG_FILE, "", { flag: "a" });
 
 const C = {
   reset: "\x1b[0m",
@@ -25,8 +25,25 @@ function ts(): string {
 }
 
 function date(): string {
-  return new Date().toLocaleDateString('en-CA');
+  return new Date().toLocaleDateString("en-CA");
 }
+
+function logFile(): string {
+  return path.join(LOG_DIR, `minclaw-${date()}.log`);
+}
+
+// Delete log files older than KEEP_DAYS
+function cleanup(): void {
+  const cutoff = Date.now() - KEEP_DAYS * 86_400_000;
+  for (const f of fs.readdirSync(LOG_DIR)) {
+    const match = f.match(/^minclaw-(\d{4}-\d{2}-\d{2})\.log$/);
+    if (match && new Date(match[1]).getTime() < cutoff) {
+      fs.unlinkSync(path.join(LOG_DIR, f));
+    }
+  }
+}
+
+setInterval(cleanup, 12 * 3_600_000);
 
 // eslint-disable-next-line no-control-regex
 const ANSI_RE = /\x1b\[[0-9;]*m/g;
@@ -37,7 +54,7 @@ function oneline(s: string): string {
 
 function write(line: string): void {
   const clean = line.replace(ANSI_RE, "");
-  fs.appendFileSync(LOG_FILE, `[${date()}]${clean}\n`);
+  fs.appendFileSync(logFile(), `[${ts()}]${clean}\n`);
 }
 
 export const log = {
