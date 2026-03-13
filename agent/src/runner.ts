@@ -52,6 +52,7 @@ const options = {
     { type: "local" as const, path: path.join(claudeDir, "skills", "weather") },
     { type: "local" as const, path: path.join(claudeDir, "skills", "github") },
     { type: "local" as const, path: path.join(claudeDir, "skills", "news") },
+    { type: "local" as const, path: path.join(claudeDir, "skills", "scheduling") },
   ],
   allowedTools: ALLOWED_TOOLS,
   permissionMode: "bypassPermissions" as const,
@@ -93,7 +94,8 @@ async function runQuery(payload: RunPayload): Promise<void> {
     .map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`)
     .join("\n");
   const prefix = payload.alert ? "[Scheduled alert]" : "User";
-  const prompt = [context, `${prefix}: ${payload.message}`].filter(Boolean).join("\n\n");
+  const reminder = "[Remember: call mcp__minclaw__send_message to reply — your output text is not delivered to the user.]";
+  const prompt = [context, `${prefix}: ${payload.message}`, reminder].filter(Boolean).join("\n\n");
 
   log.info(`run start  chatId=${payload.chatId}`);
 
