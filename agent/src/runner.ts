@@ -45,15 +45,14 @@ const ALLOWED_TOOLS = [
   "mcp__minclaw__get_chat_history",
 ];
 
+const skillsDir = path.join(claudeDir, "skills");
+const plugins = fs.readdirSync(skillsDir, { withFileTypes: true })
+  .filter((d) => d.isDirectory())
+  .map((d) => ({ type: "local" as const, path: path.join(skillsDir, d.name) }));
+
 const options = {
   cwd: "/workspace",
-  plugins: [
-    { type: "local" as const, path: path.join(claudeDir, "skills", "agent-browser") },
-    { type: "local" as const, path: path.join(claudeDir, "skills", "weather") },
-    { type: "local" as const, path: path.join(claudeDir, "skills", "github") },
-    { type: "local" as const, path: path.join(claudeDir, "skills", "news") },
-    { type: "local" as const, path: path.join(claudeDir, "skills", "scheduling") },
-  ],
+  plugins,
   allowedTools: ALLOWED_TOOLS,
   permissionMode: "bypassPermissions" as const,
   allowDangerouslySkipPermissions: true,
