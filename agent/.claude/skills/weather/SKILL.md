@@ -54,3 +54,4 @@ Target **50–80 words**. Example:
 
 - Do NOT include source links in weather replies — just give the weather
 - One search + one fetch is enough for most queries
+- Call `send_message` only ONCE with the final weather answer — do not send progress updates or intermediate steps
