@@ -6,4 +6,4 @@ services:
       - AGENT_PORT=14827
       - GH_TOKEN=${GH_TOKEN:-}
     volumes:
-      - ./data/memory:/workspace/memory
+      - ./data/memory:/data/memory

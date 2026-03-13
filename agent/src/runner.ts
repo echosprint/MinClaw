@@ -1,4 +1,5 @@
 import { query, type SettingSource } from "@anthropic-ai/claude-agent-sdk";
+import fs from "fs";
 import path from "path";
 import { log } from "./log.js";
 import { globalStream } from "./stream.js";
@@ -58,6 +59,16 @@ const options = {
   settingSources: ["project", "user"] as SettingSource[],
 };
 
+// Per-chat memory isolation: symlink /workspace/memory → /data/memory/<chatId>/
+// The agent always uses /workspace/memory/ and is unaware of other users' data.
+function switchMemory(chatId: string): void {
+  const chatMemoryDir = `/data/memory/${chatId}`;
+  const memoryLink = "/workspace/memory";
+  fs.mkdirSync(chatMemoryDir, { recursive: true });
+  fs.rmSync(memoryLink, { force: true, recursive: true });
+  fs.symlinkSync(chatMemoryDir, memoryLink);
+}
+
 export function startAgent(): void {
   void drainMessages();
 }
@@ -85,6 +96,8 @@ async function runQuery(payload: RunPayload): Promise<void> {
   const prompt = [context, `${prefix}: ${payload.message}`].filter(Boolean).join("\n\n");
 
   log.info(`run start  chatId=${payload.chatId}`);
+
+  switchMemory(payload.chatId);
 
   // Send Telegram "typing…" every 4s while the agent loop is running.
   // Typing auto-expires after ~5s in Telegram, so 4s keeps it alive.
